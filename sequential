@@ -1,0 +1,20 @@
+#include <stdio.h>
+
+struct Matrix{
+
+    int rows;
+    int columns;
+    int *arr;
+};
+
+int main(){
+
+
+    printf("===========================\n");
+    printf("Matrix Manipulation System\n");
+    printf("===========================\n");
+
+    
+
+    return 0;
+}
