@@ -5,6 +5,10 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
+
+int tasksPerWorker = 100;
+
+
 struct Matrix{
 
     int rows;
@@ -71,9 +75,23 @@ void matrixMultipication(struct Matrix matrixA, struct Matrix matrixB){
         return;
     }
 
+
+    // int totalTasks = matrixA.rows * matrixB.columns;
+    // int tasksPerWorker = totalTasks % 10;
+    // int workerCount = totalTasks / tasksPerWorker;
+    //int workerCount = totalTasks < 4 ? totalTasks : 4;
+    //int tasksPerWorker = (totalTasks + workerCount - 1) / workerCount;
+    
     int totalTasks = matrixA.rows * matrixB.columns;
-    int workerCount = totalTasks < 4 ? totalTasks : 4;
-    int tasksPerWorker = (totalTasks + workerCount - 1) / workerCount;
+    int workerCount = totalTasks / tasksPerWorker;
+
+    if (totalTasks % tasksPerWorker != 0) {
+        workerCount = workerCount + 1;
+    }
+
+    if (workerCount == 0) {
+        workerCount = 1;
+    }
 
     for (int worker = 0; worker < workerCount; worker++) {
         pid_t pid = fork();
