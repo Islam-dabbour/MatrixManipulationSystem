@@ -81,7 +81,7 @@ void matrixMultipication(struct Matrix matrixA, struct Matrix matrixB){
     // int workerCount = totalTasks / tasksPerWorker;
     //int workerCount = totalTasks < 4 ? totalTasks : 4;
     //int tasksPerWorker = (totalTasks + workerCount - 1) / workerCount;
-    
+
     int totalTasks = matrixA.rows * matrixB.columns;
     int workerCount = totalTasks / tasksPerWorker;
 
@@ -136,6 +136,18 @@ void matrixMultipication(struct Matrix matrixA, struct Matrix matrixB){
 struct Matrix matrixTransposition(struct Matrix matrix){
 
     struct Matrix matrixC = createMatrix(matrix.columns, matrix.rows);
+
+
+    int totalTasks = matrix.rows * matrix.columns;
+    int workerCount = totalTasks / tasksPerWorker;
+
+    if (totalTasks % tasksPerWorker != 0) {
+        workerCount = workerCount + 1;
+    }
+
+    if (workerCount == 0) {
+        workerCount = 1;
+    }
 
     for (int i = 0; i < matrixC.rows; i++) {
 
