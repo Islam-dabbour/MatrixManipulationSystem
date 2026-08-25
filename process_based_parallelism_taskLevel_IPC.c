@@ -73,6 +73,7 @@ void freeAllocatedMemory(struct Matrix *matrix){
 struct TransposeChunk {
     int start;
     int end;
+    int outputIndex[MAX_VALUES_PER_CHUNK];
     int values[MAX_VALUES_PER_CHUNK];
 };
 
@@ -148,12 +149,21 @@ void matrixMultipication(struct Matrix matrixA, struct Matrix matrixB){
 
 struct Matrix matrixTransposition(struct Matrix matrix){
 
+    // before we made the IPC communication we had to remove this matrix since each process has its 
+    // own memeory childs/parents, so i made them in a way where each calculate the result and the task 
+    // without sharing
+    // but now we need this matrix so each child write on the exact index he worked at
+    // and then send it to the parent to join it with the rest of the result in one main matrix
+
+    // and since its transposition if the original matrix is rows * columns the trnasposed will be:
     struct Matrix matrixC = createMatrix(matrix.columns, matrix.rows);
 
-
+    // here we calculate the number of workers, based on the custom number of tasks per woekr
+    // that i made as global varialbe, so each child will work with 100 elements/tasks
     int totalTasks = matrix.rows * matrix.columns;
     int workerCount = totalTasks / tasksPerWorker;
 
+    // if the number of total tasks isnt even (there is an extra worker needed) it adds an extra worker
     if (totalTasks % tasksPerWorker != 0) {
         workerCount = workerCount + 1;
     }
@@ -163,6 +173,13 @@ struct Matrix matrixTransposition(struct Matrix matrix){
     }
 
     for (int worker = 0; worker < workerCount; worker++) {
+
+        // here we normally create a pipe 
+        // will it couse waiting ? becuse its one shared pipe ?, which will make the process
+        // go sequentially ? 
+
+        // maybe we can make an array of pipes for each child ? 
+
         int resultPipe[2];
 
         if (pipe(resultPipe) == -1) {
@@ -175,6 +192,8 @@ struct Matrix matrixTransposition(struct Matrix matrix){
 
         if (pid == 0) {
             
+            // calculate the range of work. based on the worker id/ number 
+            // decided by the for loop above 
 
             int firstTask = worker * tasksPerWorker;
             int lastTask = firstTask + tasksPerWorker;
@@ -182,18 +201,26 @@ struct Matrix matrixTransposition(struct Matrix matrix){
             if (lastTask > totalTasks) {
                 lastTask = totalTasks;
             }
+            
+            // here we store the working range for each child in a struct to send it to parent
 
             struct TransposeChunk chunk = {
                 .start = firstTask,
                 .end = lastTask
             };
 
+            // The child calculates where each value belongs in the transposed matrix.
+
             for (int inputIndex = firstTask; inputIndex < lastTask; inputIndex++) {
                 int row = inputIndex / matrix.columns;
                 int column = inputIndex % matrix.columns;
-                chunk.values[inputIndex - firstTask] = matrix.arr[inputIndex];
+                int chunkIndex = inputIndex - firstTask;
+
+                chunk.outputIndex[chunkIndex] = column * matrixC.columns + row;
+                chunk.values[chunkIndex] = matrix.arr[inputIndex];
             }
 
+            // sned the struct that stores the result 
             close(resultPipe[0]);
             write(resultPipe[1], &chunk, sizeof chunk);
             close(resultPipe[1]);
@@ -209,14 +236,12 @@ struct Matrix matrixTransposition(struct Matrix matrix){
             continue;
         }
 
+        // The parent only joins the already-transposed values from each child.
         struct TransposeChunk chunk;
         if (read(resultPipe[0], &chunk, sizeof chunk) == sizeof chunk) {
-            for (int inputIndex = chunk.start; inputIndex < chunk.end; inputIndex++) {
-                int row = inputIndex / matrix.columns;
-                int column = inputIndex % matrix.columns;
-                int outputIndex = column * matrixC.columns + row;
+            for (int chunkIndex = 0; chunkIndex < chunk.end - chunk.start; chunkIndex++) {
 
-                matrixC.arr[outputIndex] = chunk.values[inputIndex - chunk.start];
+                matrixC.arr[chunk.outputIndex[chunkIndex]] = chunk.values[chunkIndex];
             }
         }
 
