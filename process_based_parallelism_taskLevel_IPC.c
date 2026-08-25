@@ -7,13 +7,20 @@
 
 
 int tasksPerWorker = 100;
-
+#define MAX_VALUES_PER_CHUNK 100
 
 struct Matrix{
 
     int rows;
     int columns;
     int *arr;
+};
+
+struct TransposeChunk {
+    int start;
+    int end;
+    int outputIndex[MAX_VALUES_PER_CHUNK];
+    int values[MAX_VALUES_PER_CHUNK];
 };
 
 struct Matrix fillMatrix(struct Matrix *matrix){
@@ -68,14 +75,9 @@ void freeAllocatedMemory(struct Matrix *matrix){
     
 }
 
-#define MAX_VALUES_PER_CHUNK 100
 
-struct TransposeChunk {
-    int start;
-    int end;
-    int outputIndex[MAX_VALUES_PER_CHUNK];
-    int values[MAX_VALUES_PER_CHUNK];
-};
+
+
 
 struct Matrix matrixMultipication(struct Matrix matrixA, struct Matrix matrixB){
 
@@ -383,14 +385,13 @@ int main(){
         //printf("============================\n");
 
         gettimeofday(&startM, NULL); 
-          struct Matrix multipliedMatrix = matrixMultipication(matrixA, matrixB);
+        struct Matrix multipliedMatrix = matrixMultipication(matrixA, matrixB);
         gettimeofday(&endM, NULL); 
 
           close(multiplicationPipe[0]);
           write(multiplicationPipe[1], &multipliedMatrix.rows, sizeof(int));
           write(multiplicationPipe[1], &multipliedMatrix.columns, sizeof(int));
-          write(multiplicationPipe[1], multipliedMatrix.arr,
-              (size_t)multipliedMatrix.rows * multipliedMatrix.columns * sizeof(int));
+          write(multiplicationPipe[1], multipliedMatrix.arr,(size_t)multipliedMatrix.rows * multipliedMatrix.columns * sizeof(int));
           close(multiplicationPipe[1]);
           freeAllocatedMemory(&multipliedMatrix);
 
@@ -476,39 +477,37 @@ int main(){
         }
 
 
-           close(multiplicationPipe[1]);
-           read(multiplicationPipe[0], &multiplicationResult.rows, sizeof(int));
-           read(multiplicationPipe[0], &multiplicationResult.columns, sizeof(int));
-           multiplicationResult = createMatrix(multiplicationResult.rows,
-                                        multiplicationResult.columns);
-           read(multiplicationPipe[0], multiplicationResult.arr,
-               (size_t)multiplicationResult.rows * multiplicationResult.columns * sizeof(int));
-           close(multiplicationPipe[0]);
+            close(multiplicationPipe[1]);
+            read(multiplicationPipe[0], &multiplicationResult.rows, sizeof(int));
+            read(multiplicationPipe[0], &multiplicationResult.columns, sizeof(int));
+            multiplicationResult = createMatrix(multiplicationResult.rows,multiplicationResult.columns);
+            read(multiplicationPipe[0], multiplicationResult.arr,(size_t)multiplicationResult.rows * multiplicationResult.columns * sizeof(int));
+            close(multiplicationPipe[0]);
 
-           printMatrix(multiplicationResult);
-           freeAllocatedMemory(&multiplicationResult);
+            printMatrix(multiplicationResult);
+            freeAllocatedMemory(&multiplicationResult);      
 
 
-        /// NOTE: becuse the child process that we made to do the transposition operation 
-        // have a different memory, when we send the whole struct transposed result matrix
-        // the arr will still have the pointer that point to address at the chile memory and not the parent
-        // therefore we will ssend the data seperetly then combine them 
+            /// NOTE: becuse the child process that we made to do the transposition operation 
+            // have a different memory, when we send the whole struct transposed result matrix
+            // the arr will still have the pointer that point to address at the chile memory and not the parent
+            // therefore we will ssend the data seperetly then combine them 
 
-        //  close(transpositionPipe[1]);
-        // read(transpositionPipe[0],&transposeResult,sizeof(struct Matrix)); 
-        // this is wrong 
-        // close(transpositionPipe[0]); 
+            //  close(transpositionPipe[1]);
+            // read(transpositionPipe[0],&transposeResult,sizeof(struct Matrix)); 
+            // this is wrong 
+            // close(transpositionPipe[0]); 
 
-        //printMatrix(transposeResult);
-        close(transpositionPipe[1]);
-        read(transpositionPipe[0], &transposeResult.rows, sizeof(int));
-        read(transpositionPipe[0], &transposeResult.columns, sizeof(int));
-        transposeResult = createMatrix(transposeResult.rows, transposeResult.columns);
-        read(transpositionPipe[0], transposeResult.arr,(size_t)transposeResult.rows * transposeResult.columns * sizeof(int));
-        close(transpositionPipe[0]);
+            //printMatrix(transposeResult);
+            close(transpositionPipe[1]);
+            read(transpositionPipe[0], &transposeResult.rows, sizeof(int));
+            read(transpositionPipe[0], &transposeResult.columns, sizeof(int));
+            transposeResult = createMatrix(transposeResult.rows, transposeResult.columns);
+            read(transpositionPipe[0], transposeResult.arr,(size_t)transposeResult.rows * transposeResult.columns * sizeof(int));
+            close(transpositionPipe[0]);
 
-        printMatrix(transposeResult);
-        freeAllocatedMemory(&transposeResult);
+            printMatrix(transposeResult);
+            freeAllocatedMemory(&transposeResult);
 
     }
     
