@@ -284,10 +284,9 @@ struct Matrix matrixTransposition(struct Matrix matrix){
 
 }
 
-void matrixAverage(struct Matrix matrix){
+double matrixAverage(struct Matrix matrix){
 
-    double avg = 0.0;
-    int sum = 0;
+    
 
 
     int totalTasks = matrix.rows * matrix.columns;
@@ -301,7 +300,21 @@ void matrixAverage(struct Matrix matrix){
         workerCount = 1;
     }
 
+    int resultPipes[workerCount][2];
+    int pipeLastProcess[2];
+
+    pid_t workerPids[workerCount];
+
     for (int worker = 0; worker < workerCount; worker++) {
+        if (pipe(resultPipes[worker]) == -1) {
+            perror("pipe");
+            return 0.0;
+        }
+
+        
+        
+        pipe(pipeLastProcess);
+        
 
         pid_t pid = fork();
 
@@ -314,31 +327,83 @@ void matrixAverage(struct Matrix matrix){
                 lastTask = totalTasks;
             }
 
-
+            double avg = 0.0;
+            int sum = 0;
+            int numberOfTasksForTheLastProcess;
             for (int i = firstTask; i < lastTask; i++) {
 
-                for (int j = 0; j < matrix.columns; j++) {
+                
 
-                    sum = sum + matrix.arr[i * matrix.columns + j];
+                sum = sum + matrix.arr[i];
 
+                
+
+                if ((lastTask - firstTask) - 100 == 0){
+                    //avg = (sum) / tasksPerWorker;
+                }else {
+                    numberOfTasksForTheLastProcess = ((lastTask - firstTask) - 100) * -1;
+                    
                 }
 
+               
+
             }
+
+            if(worker == workerCount - 1){
+                avg = (double)sum  / numberOfTasksForTheLastProcess;
+                close(pipeLastProcess[0]);
+                write(pipeLastProcess[1],&numberOfTasksForTheLastProcess,sizeof (numberOfTasksForTheLastProcess));
+                close(pipeLastProcess[1]);
+            }else{
+                avg = (double)sum / tasksPerWorker;
+            }
+
+            close(resultPipes[worker][0]);
+            write(resultPipes[worker][1], &avg, sizeof avg);
+            close(resultPipes[worker][1]);
 
             fflush(stdout);
             _exit(0);
         }
 
-        
+        workerPids[worker] = pid;
+        close(resultPipes[worker][1]);
 
     }
+
+    double totalAvg = 0.0;
+    int numberOfTasksForTheLastProcess;
 
     for (int worker = 0; worker < workerCount; worker++) {
-        wait(NULL);
+
+        if (worker == workerCount -1 ){
+            double avg = 0.0;
+            close(resultPipes[worker][1]);
+            read(resultPipes[worker][0],&avg,sizeof avg);
+            close(resultPipes[worker][0]);
+
+            
+            close(pipeLastProcess[1]);
+            read(pipeLastProcess[0],&numberOfTasksForTheLastProcess,sizeof (numberOfTasksForTheLastProcess));
+            close(pipeLastProcess[0]);
+
+            totalAvg = totalAvg + (numberOfTasksForTheLastProcess * avg);
+
+        }else{
+            double avg = 0.0;
+            close(resultPipes[worker][1]);
+            read(resultPipes[worker][0],&avg,sizeof avg);
+            close(resultPipes[worker][0]);
+            totalAvg = totalAvg + (tasksPerWorker * avg);
+        }
+        
     }
 
-    avg = (double)sum / (matrix.columns * matrix.rows);
-    //return avg;
+    totalAvg = totalAvg / (((workerCount - 1) * tasksPerWorker) + numberOfTasksForTheLastProcess);
+
+
+    //avg = (double)sum / (matrix.columns * matrix.rows);
+    return totalAvg;
 
 }
 
