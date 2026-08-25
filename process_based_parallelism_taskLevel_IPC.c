@@ -302,7 +302,7 @@ double matrixAverage(struct Matrix matrix){
 
     int resultPipes[workerCount][2];
     int pipeLastProcess[2];
-
+    pipe(pipeLastProcess);
     pid_t workerPids[workerCount];
 
     for (int worker = 0; worker < workerCount; worker++) {
@@ -313,7 +313,7 @@ double matrixAverage(struct Matrix matrix){
 
         
         
-        pipe(pipeLastProcess);
+        
         
 
         pid_t pid = fork();
@@ -378,7 +378,13 @@ double matrixAverage(struct Matrix matrix){
 
         if (worker == workerCount -1 ){
             double avg = 0.0;
-            close(resultPipes[worker][1]);
+
+            // NTOE: this is a bug i had and how i fixed it
+            // in the fork the parent alrady closes the write end
+            // so when we close it again here it couses a problem 
+            // which couses for one of the workers to write 0 to the pipe 
+            // leading to wrong total avg calculation
+            //close(resultPipes[worker][1]);
             read(resultPipes[worker][0],&avg,sizeof avg);
             close(resultPipes[worker][0]);
 
@@ -391,7 +397,7 @@ double matrixAverage(struct Matrix matrix){
 
         }else{
             double avg = 0.0;
-            close(resultPipes[worker][1]);
+            //close(resultPipes[worker][1]);
             read(resultPipes[worker][0],&avg,sizeof avg);
             close(resultPipes[worker][0]);
             totalAvg = totalAvg + (tasksPerWorker * avg);
