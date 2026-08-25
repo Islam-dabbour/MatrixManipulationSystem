@@ -68,6 +68,14 @@ void freeAllocatedMemory(struct Matrix *matrix){
     
 }
 
+#define MAX_VALUES_PER_CHUNK 100
+
+struct TransposeChunk {
+    int start;
+    int end;
+    int values[MAX_VALUES_PER_CHUNK];
+};
+
 void matrixMultipication(struct Matrix matrixA, struct Matrix matrixB){
 
     if (matrixA.columns != matrixB.rows) {
@@ -104,14 +112,19 @@ void matrixMultipication(struct Matrix matrixA, struct Matrix matrixB){
                 lastTask = totalTasks;
             }
 
+            struct Matrix matrixC = createMatrix(matrixA.rows, matrixB.columns);
+
             for (int task = firstTask; task < lastTask; task++) {
                 int row = task / matrixB.columns;
                 int column = task % matrixB.columns;
                 int result = 0;
 
+                
+
                 for (int k = 0; k < matrixA.columns; k++) {
-                    result += matrixA.arr[row * matrixA.columns + k] *
-                              matrixB.arr[k * matrixB.columns + column];
+
+                    result += matrixA.arr[row * matrixA.columns + k] * matrixB.arr[k * matrixB.columns + column];
+                
                 }
 
                 // printf("Worker %d calculated C[%d][%d] = %d\n",
@@ -133,7 +146,7 @@ void matrixMultipication(struct Matrix matrixA, struct Matrix matrixB){
     }
 }
 
-void matrixTransposition(struct Matrix matrix){
+struct Matrix matrixTransposition(struct Matrix matrix){
 
     struct Matrix matrixC = createMatrix(matrix.columns, matrix.rows);
 
@@ -150,10 +163,18 @@ void matrixTransposition(struct Matrix matrix){
     }
 
     for (int worker = 0; worker < workerCount; worker++) {
+        int resultPipe[2];
+
+        if (pipe(resultPipe) == -1) {
+            perror("pipe");
+            freeAllocatedMemory(&matrixC);
+            return createMatrix(0, 0);
+        }
 
         pid_t pid = fork();
 
         if (pid == 0) {
+            
 
             int firstTask = worker * tasksPerWorker;
             int lastTask = firstTask + tasksPerWorker;
@@ -162,36 +183,48 @@ void matrixTransposition(struct Matrix matrix){
                 lastTask = totalTasks;
             }
 
-            for (int i = firstTask; i < lastTask; i++) {
+            struct TransposeChunk chunk = {
+                .start = firstTask,
+                .end = lastTask
+            };
 
-                int row = i / matrix.columns;
-                int column = i % matrix.columns;
-                
-
-                for (int j = 0; j < matrixC.columns; j++) {
-
-                    matrixC.arr[i * matrixC.columns + j] = matrix.arr[j * matrix.columns + i];
-
-                }
-
+            for (int inputIndex = firstTask; inputIndex < lastTask; inputIndex++) {
+                int row = inputIndex / matrix.columns;
+                int column = inputIndex % matrix.columns;
+                chunk.values[inputIndex - firstTask] = matrix.arr[inputIndex];
             }
 
-            fflush(stdout);
+            close(resultPipe[0]);
+            write(resultPipe[1], &chunk, sizeof chunk);
+            close(resultPipe[1]);
             _exit(0);
 
         }
 
-         if (pid < 0) {
+        close(resultPipe[1]);
+
+        if (pid < 0) {
             perror("fork");
-            break;
+            close(resultPipe[0]);
+            continue;
         }
 
+        struct TransposeChunk chunk;
+        if (read(resultPipe[0], &chunk, sizeof chunk) == sizeof chunk) {
+            for (int inputIndex = chunk.start; inputIndex < chunk.end; inputIndex++) {
+                int row = inputIndex / matrix.columns;
+                int column = inputIndex % matrix.columns;
+                int outputIndex = column * matrixC.columns + row;
 
+                matrixC.arr[outputIndex] = chunk.values[inputIndex - chunk.start];
+            }
+        }
+
+        close(resultPipe[0]);
+        waitpid(pid, NULL, 0);
     }
 
-    for (int worker = 0; worker < workerCount; worker++) {
-        wait(NULL);
-    }
+    return matrixC;
 
 }
 
@@ -258,7 +291,7 @@ int main(){
 
     srand(time(NULL));
     struct timeval start, end; 
-    
+    struct Matrix transposeResult;
     
     
 
@@ -306,6 +339,8 @@ int main(){
         exit(0);
 
     }else{
+        int transpositionPipe[2];
+        pipe(transpositionPipe);
 
         int pid2 = fork();
 
@@ -318,11 +353,19 @@ int main(){
             //printf("============================\n");
 
             gettimeofday(&startT, NULL); 
-            matrixTransposition(matrixA);
+            struct Matrix transposedMtrix = matrixTransposition(matrixA);
             gettimeofday(&endT, NULL);
             
             double timeTakenT =(endT.tv_sec - startT.tv_sec) +(endT.tv_usec - startT.tv_usec) / 1000000.0;
             
+            close(transpositionPipe[0]);
+            write(transpositionPipe[1], &transposedMtrix.rows, sizeof(int));
+            write(transpositionPipe[1], &transposedMtrix.columns, sizeof(int));
+            write(transpositionPipe[1], transposedMtrix.arr,(size_t)transposedMtrix.rows * transposedMtrix.columns * sizeof(int));
+            close(transpositionPipe[1]);
+
+            //printMatrix(transposedMtrix);
+
             printf("\n");
 
             printf("> Time taken to finish Transposition > %f\n",timeTakenT);
@@ -360,6 +403,28 @@ int main(){
             }
         }
 
+
+        /// NOTE: becuse the child process that we made to do the transposition operation 
+        // have a different memory, when we send the whole struct transposed result matrix
+        // the arr will still have the pointer that point to address at the chile memory and not the parent
+        // therefore we will ssend the data seperetly then combine them 
+
+        //  close(transpositionPipe[1]);
+        // read(transpositionPipe[0],&transposeResult,sizeof(struct Matrix)); 
+        // this is wrong 
+        // close(transpositionPipe[0]); 
+
+        //printMatrix(transposeResult);
+        close(transpositionPipe[1]);
+       read(transpositionPipe[0], &transposeResult.rows, sizeof(int));
+       read(transpositionPipe[0], &transposeResult.columns, sizeof(int));
+       transposeResult = createMatrix(transposeResult.rows, transposeResult.columns);
+       read(transpositionPipe[0], transposeResult.arr,(size_t)transposeResult.rows * transposeResult.columns * sizeof(int));
+       close(transpositionPipe[0]);
+
+       printMatrix(transposeResult);
+       freeAllocatedMemory(&transposeResult);
+
     }
     
 
@@ -370,6 +435,8 @@ int main(){
         wait(NULL);
         
     }
+
+    
 
     freeAllocatedMemory(&matrixA);
     freeAllocatedMemory(&matrixB);

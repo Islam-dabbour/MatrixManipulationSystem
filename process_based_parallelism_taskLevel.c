@@ -16,6 +16,14 @@ struct Matrix{
     int *arr;
 };
 
+struct TASK{
+    
+    int firstTask; // starting index
+    int lastTask; // ending index 
+    int *resultArray; // a pointer pointing to the result array made by a child 
+
+};
+
 struct Matrix fillMatrix(struct Matrix *matrix){
 
     for (int i = 0; i < matrix->rows; i++) {
@@ -97,21 +105,26 @@ void matrixMultipication(struct Matrix matrixA, struct Matrix matrixB){
         pid_t pid = fork();
 
         if (pid == 0) {
+
             int firstTask = worker * tasksPerWorker;
             int lastTask = firstTask + tasksPerWorker;
 
             if (lastTask > totalTasks) {
+
                 lastTask = totalTasks;
+
             }
 
             for (int task = firstTask; task < lastTask; task++) {
+
                 int row = task / matrixB.columns;
                 int column = task % matrixB.columns;
                 int result = 0;
 
                 for (int k = 0; k < matrixA.columns; k++) {
-                    result += matrixA.arr[row * matrixA.columns + k] *
-                              matrixB.arr[k * matrixB.columns + column];
+
+                    result += matrixA.arr[row * matrixA.columns + k] * matrixB.arr[k * matrixB.columns + column];
+                
                 }
 
                 // printf("Worker %d calculated C[%d][%d] = %d\n",
