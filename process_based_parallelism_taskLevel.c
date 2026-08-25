@@ -133,7 +133,7 @@ void matrixMultipication(struct Matrix matrixA, struct Matrix matrixB){
     }
 }
 
-struct Matrix matrixTransposition(struct Matrix matrix){
+void matrixTransposition(struct Matrix matrix){
 
     struct Matrix matrixC = createMatrix(matrix.columns, matrix.rows);
 
@@ -149,37 +149,107 @@ struct Matrix matrixTransposition(struct Matrix matrix){
         workerCount = 1;
     }
 
-    for (int i = 0; i < matrixC.rows; i++) {
+    for (int worker = 0; worker < workerCount; worker++) {
 
-        for (int j = 0; j < matrixC.columns; j++) {
+        pid_t pid = fork();
 
-            matrixC.arr[i * matrixC.columns + j] = matrix.arr[j * matrix.columns + i];
+        if (pid == 0) {
+
+            int firstTask = worker * tasksPerWorker;
+            int lastTask = firstTask + tasksPerWorker;
+
+            if (lastTask > totalTasks) {
+                lastTask = totalTasks;
+            }
+
+            for (int i = firstTask; i < lastTask; i++) {
+
+                int row = i / matrix.columns;
+                int column = i % matrix.columns;
+                
+
+                for (int j = 0; j < matrixC.columns; j++) {
+
+                    matrixC.arr[i * matrixC.columns + j] = matrix.arr[j * matrix.columns + i];
+
+                }
+
+            }
+
+            fflush(stdout);
+            _exit(0);
 
         }
 
+         if (pid < 0) {
+            perror("fork");
+            break;
+        }
+
+
     }
 
-    return matrixC;
+    for (int worker = 0; worker < workerCount; worker++) {
+        wait(NULL);
+    }
 
 }
 
-double matrixAverage(struct Matrix matrix){
+void matrixAverage(struct Matrix matrix){
 
     double avg = 0.0;
     int sum = 0;
 
-    for (int i = 0; i < matrix.rows; i++) {
 
-        for (int j = 0; j < matrix.columns; j++) {
+    int totalTasks = matrix.rows * matrix.columns;
+    int workerCount = totalTasks / tasksPerWorker;
 
-            sum = sum + matrix.arr[i * matrix.columns + j];
+    if (totalTasks % tasksPerWorker != 0) {
+        workerCount = workerCount + 1;
+    }
 
+    if (workerCount == 0) {
+        workerCount = 1;
+    }
+
+    for (int worker = 0; worker < workerCount; worker++) {
+
+        pid_t pid = fork();
+
+        if (pid == 0) {
+
+            int firstTask = worker * tasksPerWorker;
+            int lastTask = firstTask + tasksPerWorker;
+
+            if (lastTask > totalTasks) {
+                lastTask = totalTasks;
+            }
+
+
+            for (int i = firstTask; i < lastTask; i++) {
+
+                for (int j = 0; j < matrix.columns; j++) {
+
+                    sum = sum + matrix.arr[i * matrix.columns + j];
+
+                }
+
+            }
+
+            fflush(stdout);
+            _exit(0);
         }
+
+        
 
     }
 
+    for (int worker = 0; worker < workerCount; worker++) {
+        wait(NULL);
+    }
+
     avg = (double)sum / (matrix.columns * matrix.rows);
-    return avg;
+    //return avg;
 
 }
 
@@ -248,7 +318,7 @@ int main(){
             //printf("============================\n");
 
             gettimeofday(&startT, NULL); 
-            struct Matrix matrixTranspositionResult = matrixTransposition(matrixA);
+            matrixTransposition(matrixA);
             gettimeofday(&endT, NULL);
             
             double timeTakenT =(endT.tv_sec - startT.tv_sec) +(endT.tv_usec - startT.tv_usec) / 1000000.0;
@@ -259,7 +329,7 @@ int main(){
 
             printf("\n");
 
-            freeAllocatedMemory(&matrixTranspositionResult);
+            //freeAllocatedMemory(&matrixTranspositionResult);
             exit(0);
 
         }else{
@@ -275,7 +345,7 @@ int main(){
                 //printf("============================\n");
 
                 gettimeofday(&startA, NULL); 
-                double avg = matrixAverage(matrixA);
+                matrixAverage(matrixA);
                 gettimeofday(&endA, NULL);
 
                 double timeTakenA =(endA.tv_sec - startA.tv_sec) +(endA.tv_usec - startA.tv_usec) / 1000000.0;
