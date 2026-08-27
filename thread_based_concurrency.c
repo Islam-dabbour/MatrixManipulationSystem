@@ -4,7 +4,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <threads.h>
+#include <pthread.h>
 
 struct Matrix{
 
@@ -12,6 +12,14 @@ struct Matrix{
     int columns;
     int *arr;
 };
+
+struct MatrixMultiplicationArgs{
+    struct Matrix *matrixA;
+    struct Matrix *matrixB;
+    struct Matrix result;
+};
+
+struct Matrix transposedMatrix;
 
 struct Matrix fillMatrix(struct Matrix *matrix){
 
@@ -135,14 +143,44 @@ double matrixAverage(struct Matrix matrix){
 
 }
 
+void *matrixMultipicationThread (void *arg){
+
+    struct MatrixMultiplicationArgs *matrices = arg;
+
+    struct timeval startM, endM; 
+
+    printf("============================\n");
+    printf("   Matrix Multipication     \n");
+    //printf("============================\n");
+    gettimeofday(&startM, NULL); 
+    matrices->result = matrixMultipication(*matrices->matrixA, *matrices->matrixB);
+    gettimeofday(&endM, NULL); 
+    double timeTakenM =(endM.tv_sec - startM.tv_sec) +(endM.tv_usec - startM.tv_usec) / 1000000.0;
+    printf("\n");
+    printf("> Time taken to finish multipcation > %f\n",timeTakenM);
+
+    printf("\n");
+
+    return NULL;
+}
+
+void *matrixTransposition (void *arg){
+
+}
+
+void *matrixAverage (void *arg){
+
+}
+
 
 int main(){
 
     srand(time(NULL));
     struct timeval start, end; 
-    struct timeval startM, endM; 
     struct timeval startT, endT; 
     struct timeval startA, endA; 
+
+    pthread_t operations[3];
 
     gettimeofday(&start, NULL); 
 
@@ -159,20 +197,24 @@ int main(){
 
     struct Matrix matrixA = createMatrix(rowsA, columnsA);
     struct Matrix matrixB = createMatrix(rowsB, columnsB);
+    struct MatrixMultiplicationArgs multiplicationArgs = {
+        .matrixA = &matrixA,
+        .matrixB = &matrixB,
+        .result = {0}
+    };
 
-    printMatrix(matrixA);
+    if (pthread_create(&operations[0], NULL, matrixMultipicationThread, &multiplicationArgs) != 0) {
+        fprintf(stderr, "Failed to create multiplication thread\n");
+        freeAllocatedMemory(&matrixA);
+        freeAllocatedMemory(&matrixB);
+        return EXIT_FAILURE;
+    }
 
-    printf("============================\n");
-    printf("   Matrix Multipication     \n");
-    //printf("============================\n");
-    gettimeofday(&startM, NULL); 
-    struct Matrix matrixMultipicationResult = matrixMultipication(matrixA, matrixB);
-    gettimeofday(&endM, NULL); 
-    double timeTakenM =(endM.tv_sec - startM.tv_sec) +(endM.tv_usec - startM.tv_usec) / 1000000.0;
-    printf("\n");
-    printf("> Time taken to finish multipcation > %f\n",timeTakenM);
+    pthread_join(operations[0], NULL);
 
-    printf("\n");
+    //printMatrix(matrixA);
+
+   
 
     printf("============================\n");
     printf("   Matrix Transposition     \n");
@@ -199,7 +241,7 @@ int main(){
 
     freeAllocatedMemory(&matrixA);
     freeAllocatedMemory(&matrixB);
-    freeAllocatedMemory(&matrixMultipicationResult);
+    freeAllocatedMemory(&multiplicationArgs.result);
     freeAllocatedMemory(&matrixTranspositionResult);
     
 
