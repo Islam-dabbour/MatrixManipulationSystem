@@ -20,12 +20,7 @@ struct MatricesArgs{
     struct Matrix transposedMatrix;
 };
 
-
-
 struct Matrix fillMatrix(struct Matrix *matrix){
-
-    srand(time(NULL));
-
     for (int i = 0; i < matrix->rows; i++) {
 
         for (int j = 0; j < matrix->columns; j++) {
@@ -53,6 +48,17 @@ struct Matrix createMatrix(int rows, int columns){
 
     return matrix;
 
+}
+
+struct Matrix createEmptyMatrix(int rows, int columns){
+
+    struct Matrix matrix = {
+        .rows = rows,
+        .columns = columns,
+        .arr = calloc((size_t)rows * columns, sizeof *matrix.arr)
+    };
+
+    return matrix;
 }
 
 void printMatrix(struct Matrix matrix){
@@ -85,7 +91,7 @@ struct Matrix matrixMultipication(struct Matrix matrixA, struct Matrix matrixB){
         return (struct Matrix){0};
     }
 
-    struct Matrix matrixC = createMatrix(matrixA.rows, matrixB.columns);
+    struct Matrix matrixC = createEmptyMatrix(matrixA.rows, matrixB.columns);
 
     for (int i = 0; i < matrixC.rows; i++) {
 
@@ -108,7 +114,7 @@ struct Matrix matrixMultipication(struct Matrix matrixA, struct Matrix matrixB){
 
 struct Matrix matrixTransposition(struct Matrix matrix){
 
-    struct Matrix matrixC = createMatrix(matrix.columns, matrix.rows);
+    struct Matrix matrixC = createEmptyMatrix(matrix.columns, matrix.rows);
 
     for (int i = 0; i < matrixC.rows; i++) {
 
@@ -154,6 +160,7 @@ void *matrixMultipicationThread (void *arg){
     printf("   Matrix Multipication     \n");
     //printf("============================\n");
     gettimeofday(&startM, NULL); 
+    
     matrices->result = matrixMultipication(*matrices->matrixA, *matrices->matrixB);
     gettimeofday(&endM, NULL); 
     double timeTakenM =(endM.tv_sec - startM.tv_sec) +(endM.tv_usec - startM.tv_usec) / 1000000.0;
@@ -203,14 +210,17 @@ void *matrixAverageThread (void *arg){
     double timeTakenA =(endA.tv_sec - startA.tv_sec) +(endA.tv_usec - startA.tv_usec) / 1000000.0;
     printf("\n");
     printf("> Time taken to finish Average calculation > %f\n",timeTakenA);
+    printf("> Average: %f\n", avg);
     printf("============================\n");
+
+    return NULL;
 
 }
 
 
-int main(){
+int main(void){
 
-    srand(time(NULL));
+    srand((unsigned)time(NULL));
     struct timeval start, end;  
      
 
