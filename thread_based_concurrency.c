@@ -190,7 +190,20 @@ void *matrixTranspositionThread (void *arg){
 
 void *matrixAverageThread (void *arg){
 
-    (void)arg;
+    struct timeval startA, endA;
+
+    struct MatricesArgs *matrices = arg;
+
+    printf("============================\n");
+    printf("      Matrix Average        \n");
+    //printf("============================\n");
+    gettimeofday(&startA, NULL); 
+    double avg = matrixAverage(*matrices->matrixA);
+    gettimeofday(&endA, NULL);
+    double timeTakenA =(endA.tv_sec - startA.tv_sec) +(endA.tv_usec - startA.tv_usec) / 1000000.0;
+    printf("\n");
+    printf("> Time taken to finish Average calculation > %f\n",timeTakenA);
+    printf("============================\n");
 
 }
 
@@ -199,7 +212,7 @@ int main(){
 
     srand(time(NULL));
     struct timeval start, end;  
-    struct timeval startA, endA; 
+     
 
     pthread_t operations[3];
 
@@ -232,7 +245,7 @@ int main(){
         return EXIT_FAILURE;
     }
 
-    pthread_join(operations[0], NULL);
+    
 
     //printMatrix(matrixA);
 
@@ -244,19 +257,19 @@ int main(){
         return EXIT_FAILURE;
     }
 
+    
+
+    if (pthread_create(&operations[2], NULL, matrixAverageThread, &matriecesArgs) != 0) {
+        fprintf(stderr, "Failed to create transposition thread\n");
+        freeAllocatedMemory(&matrixA);
+        freeAllocatedMemory(&matrixB);
+        return EXIT_FAILURE;
+    }
+
+    pthread_join(operations[0], NULL);
     pthread_join(operations[1], NULL);
+    pthread_join(operations[2], NULL);
 
-
-    printf("============================\n");
-    printf("      Matrix Average        \n");
-    //printf("============================\n");
-    gettimeofday(&startA, NULL); 
-    double avg = matrixAverage(matrixA);
-    gettimeofday(&endA, NULL);
-    double timeTakenA =(endA.tv_sec - startA.tv_sec) +(endA.tv_usec - startA.tv_usec) / 1000000.0;
-    printf("\n");
-    printf("> Time taken to finish Average calculation > %f\n",timeTakenA);
-    printf("============================\n");
 
     freeAllocatedMemory(&matrixA);
     freeAllocatedMemory(&matrixB);
