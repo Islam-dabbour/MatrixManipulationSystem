@@ -444,6 +444,9 @@ int main(){
     int multiplicationPipe[2];
     pipe(multiplicationPipe);
 
+    int avragePipe[2];
+    pipe(avragePipe);
+
     //printMatrix(matrixA);
     int pid1 = fork();
 
@@ -521,6 +524,8 @@ int main(){
 
         }else{
             
+           
+
             int pid3 = fork();
 
             if( pid3 == 0 ){
@@ -532,7 +537,10 @@ int main(){
                 //printf("============================\n");
 
                 gettimeofday(&startA, NULL); 
-                matrixAverage(matrixA);
+                double avg = matrixAverage(matrixA);
+                close(avragePipe[0]);
+                write(avragePipe[1],&avg,sizeof(avg));
+                close(avragePipe[1]);
                 gettimeofday(&endA, NULL);
 
                 double timeTakenA =(endA.tv_sec - startA.tv_sec) +(endA.tv_usec - startA.tv_usec) / 1000000.0;
@@ -579,6 +587,12 @@ int main(){
 
             printMatrix(transposeResult);
             freeAllocatedMemory(&transposeResult);
+
+            double avg = 0.0;
+            close(avragePipe[1]);
+            read(avragePipe[0],&avg,sizeof(avg));
+            close(avragePipe[0]);
+
 
     }
     
