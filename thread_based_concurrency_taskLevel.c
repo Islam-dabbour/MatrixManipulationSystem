@@ -6,6 +6,8 @@
 #include <sys/wait.h>
 #include <pthread.h>
 
+#define TASKS_PER_WORKER 100
+
 struct Matrix{
 
     int rows;
@@ -18,6 +20,15 @@ struct MatricesArgs{
     struct Matrix *matrixB;
     struct Matrix result;
     struct Matrix transposedMatrix;
+};
+
+struct MatrixMultiplicationTaskArgs{
+    const struct Matrix *matrixA;
+    const struct Matrix *matrixB;
+    struct Matrix *result;
+    int firstTask;
+    int lastTask;
+    pthread_mutex_t *resultMutex;
 };
 
 struct Matrix fillMatrix(struct Matrix *matrix){
@@ -85,6 +96,28 @@ void freeAllocatedMemory(struct Matrix *matrix){
     
 }
 
+void *matrixMultiplicationTask(void *arg){
+
+    struct MatrixMultiplicationTaskArgs *task = arg;
+
+    for (int outputIndex = task->firstTask; outputIndex < task->lastTask; outputIndex++) {
+        int row = outputIndex / task->result->columns;
+        int column = outputIndex % task->result->columns;
+        int value = 0;
+
+        for (int k = 0; k < task->matrixA->columns; k++) {
+            value += task->matrixA->arr[row * task->matrixA->columns + k] *
+                     task->matrixB->arr[k * task->matrixB->columns + column];
+        }
+
+        pthread_mutex_lock(task->resultMutex);
+        task->result->arr[outputIndex] = value;
+        pthread_mutex_unlock(task->resultMutex);
+    }
+
+    return NULL;
+}
+
 struct Matrix matrixMultipication(struct Matrix matrixA, struct Matrix matrixB){
 
     if (matrixA.columns != matrixB.rows) {
@@ -92,21 +125,52 @@ struct Matrix matrixMultipication(struct Matrix matrixA, struct Matrix matrixB){
     }
 
     struct Matrix matrixC = createEmptyMatrix(matrixA.rows, matrixB.columns);
+    int totalTasks = matrixC.rows * matrixC.columns;
+    int workerCount = totalTasks > 0 ? (totalTasks + TASKS_PER_WORKER - 1) / TASKS_PER_WORKER : 1;
+    pthread_t workers[workerCount];
+    struct MatrixMultiplicationTaskArgs taskArgs[workerCount];
+    pthread_mutex_t resultMutex;
+    int createdWorkers = 0;
 
-    for (int i = 0; i < matrixC.rows; i++) {
+    if (pthread_mutex_init(&resultMutex, NULL) != 0) {
+        freeAllocatedMemory(&matrixC);
+        return (struct Matrix){0};
+    }
 
-        for (int j = 0; j < matrixC.columns; j++) {
+    for (int worker = 0; worker < workerCount; worker++) {
+        int firstTask = worker * TASKS_PER_WORKER;
+        int lastTask = firstTask + TASKS_PER_WORKER;
 
-            matrixC.arr[i * matrixC.columns + j] = 0;
-
-            for (int k = 0; k < matrixA.columns; k++) {
-
-                matrixC.arr[i * matrixC.columns + j] += matrixA.arr[i * matrixA.columns + k] * matrixB.arr[k * matrixB.columns + j];
-            
-            }
-        
+        if (lastTask > totalTasks) {
+            lastTask = totalTasks;
         }
-    
+
+        taskArgs[worker] = (struct MatrixMultiplicationTaskArgs){
+            .matrixA = &matrixA,
+            .matrixB = &matrixB,
+            .result = &matrixC,
+            .firstTask = firstTask,
+            .lastTask = lastTask,
+            .resultMutex = &resultMutex
+        };
+
+        if (pthread_create(&workers[worker], NULL, matrixMultiplicationTask, &taskArgs[worker]) != 0) {
+            fprintf(stderr, "Failed to create multiplication worker thread\n");
+            break;
+        }
+
+        createdWorkers++;
+    }
+
+    for (int worker = 0; worker < createdWorkers; worker++) {
+        pthread_join(workers[worker], NULL);
+    }
+
+    pthread_mutex_destroy(&resultMutex);
+
+    if (createdWorkers != workerCount) {
+        freeAllocatedMemory(&matrixC);
+        return (struct Matrix){0};
     }
 
     return matrixC;
