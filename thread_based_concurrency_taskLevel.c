@@ -31,6 +31,14 @@ struct MatrixMultiplicationTaskArgs{
     pthread_mutex_t *resultMutex;
 };
 
+struct MatrixTranspositionTaskArgs{
+    const struct Matrix *matrix;
+    struct Matrix *result;
+    int firstTask;
+    int lastTask;
+    pthread_mutex_t *resultMutex;
+};
+
 struct Matrix fillMatrix(struct Matrix *matrix){
     for (int i = 0; i < matrix->rows; i++) {
 
@@ -176,18 +184,74 @@ struct Matrix matrixMultipication(struct Matrix matrixA, struct Matrix matrixB){
     return matrixC;
 }
 
+void *matrixTranspositionTask(void *arg){
+
+    struct MatrixTranspositionTaskArgs *task = arg;
+
+    for (int inputIndex = task->firstTask; inputIndex < task->lastTask; inputIndex++) {
+        int row = inputIndex / task->matrix->columns;
+        int column = inputIndex % task->matrix->columns;
+        int outputIndex = column * task->result->columns + row;
+        int value = task->matrix->arr[inputIndex];
+
+        pthread_mutex_lock(task->resultMutex);
+        task->result->arr[outputIndex] = value;
+        pthread_mutex_unlock(task->resultMutex);
+    }
+
+    return NULL;
+}
+
 struct Matrix matrixTransposition(struct Matrix matrix){
 
     struct Matrix matrixC = createEmptyMatrix(matrix.columns, matrix.rows);
+    int totalTasks = matrix.rows * matrix.columns;
+    int workerCount = totalTasks > 0
+        ? (totalTasks + TASKS_PER_WORKER - 1) / TASKS_PER_WORKER
+        : 1;
+    pthread_t workers[workerCount];
+    struct MatrixTranspositionTaskArgs taskArgs[workerCount];
+    pthread_mutex_t resultMutex;
+    int createdWorkers = 0;
 
-    for (int i = 0; i < matrixC.rows; i++) {
+    if (pthread_mutex_init(&resultMutex, NULL) != 0) {
+        freeAllocatedMemory(&matrixC);
+        return (struct Matrix){0};
+    }
 
-        for (int j = 0; j < matrixC.columns; j++) {
+    for (int worker = 0; worker < workerCount; worker++) {
+        int firstTask = worker * TASKS_PER_WORKER;
+        int lastTask = firstTask + TASKS_PER_WORKER;
 
-            matrixC.arr[i * matrixC.columns + j] = matrix.arr[j * matrix.columns + i];
-
+        if (lastTask > totalTasks) {
+            lastTask = totalTasks;
         }
 
+        taskArgs[worker] = (struct MatrixTranspositionTaskArgs){
+            .matrix = &matrix,
+            .result = &matrixC,
+            .firstTask = firstTask,
+            .lastTask = lastTask,
+            .resultMutex = &resultMutex
+        };
+
+        if (pthread_create(&workers[worker], NULL, matrixTranspositionTask, &taskArgs[worker]) != 0) {
+            fprintf(stderr, "Failed to create transposition worker thread\n");
+            break;
+        }
+
+        createdWorkers++;
+    }
+
+    for (int worker = 0; worker < createdWorkers; worker++) {
+        pthread_join(workers[worker], NULL);
+    }
+
+    pthread_mutex_destroy(&resultMutex);
+
+    if (createdWorkers != workerCount) {
+        freeAllocatedMemory(&matrixC);
+        return (struct Matrix){0};
     }
 
     return matrixC;
