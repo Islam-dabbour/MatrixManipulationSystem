@@ -39,6 +39,14 @@ struct MatrixTranspositionTaskArgs{
     pthread_mutex_t *resultMutex;
 };
 
+struct MatrixAverageTaskArgs{
+    const struct Matrix *matrix;
+    int firstTask;
+    int lastTask;
+    long long *totalSum;
+    pthread_mutex_t *sumMutex;
+};
+
 struct Matrix fillMatrix(struct Matrix *matrix){
     for (int i = 0; i < matrix->rows; i++) {
 
@@ -258,23 +266,73 @@ struct Matrix matrixTransposition(struct Matrix matrix){
 
 }
 
-double matrixAverage(struct Matrix matrix){
+void *matrixAverageTask(void *arg){
 
-    double avg = 0.0;
-    int sum = 0;
+    struct MatrixAverageTaskArgs *task = arg;
+    long long partialSum = 0;
 
-    for (int i = 0; i < matrix.rows; i++) {
-
-        for (int j = 0; j < matrix.columns; j++) {
-
-            sum = sum + matrix.arr[i * matrix.columns + j];
-
-        }
-
+    for (int inputIndex = task->firstTask; inputIndex < task->lastTask; inputIndex++) {
+        partialSum += task->matrix->arr[inputIndex];
     }
 
-    avg = sum / (matrix.columns * matrix.rows);
-    return avg;
+    pthread_mutex_lock(task->sumMutex);
+    *task->totalSum += partialSum;
+    pthread_mutex_unlock(task->sumMutex);
+
+    return NULL;
+}
+
+double matrixAverage(struct Matrix matrix){
+
+    int totalTasks = matrix.rows * matrix.columns;
+    int workerCount = totalTasks > 0
+        ? (totalTasks + TASKS_PER_WORKER - 1) / TASKS_PER_WORKER
+        : 1;
+    pthread_t workers[workerCount];
+    struct MatrixAverageTaskArgs taskArgs[workerCount];
+    pthread_mutex_t sumMutex;
+    long long totalSum = 0;
+    int createdWorkers = 0;
+
+    if (pthread_mutex_init(&sumMutex, NULL) != 0) {
+        return 0.0;
+    }
+
+    for (int worker = 0; worker < workerCount; worker++) {
+        int firstTask = worker * TASKS_PER_WORKER;
+        int lastTask = firstTask + TASKS_PER_WORKER;
+
+        if (lastTask > totalTasks) {
+            lastTask = totalTasks;
+        }
+
+        taskArgs[worker] = (struct MatrixAverageTaskArgs){
+            .matrix = &matrix,
+            .firstTask = firstTask,
+            .lastTask = lastTask,
+            .totalSum = &totalSum,
+            .sumMutex = &sumMutex
+        };
+
+        if (pthread_create(&workers[worker], NULL, matrixAverageTask, &taskArgs[worker]) != 0) {
+            fprintf(stderr, "Failed to create average worker thread\n");
+            break;
+        }
+
+        createdWorkers++;
+    }
+
+    for (int worker = 0; worker < createdWorkers; worker++) {
+        pthread_join(workers[worker], NULL);
+    }
+
+    pthread_mutex_destroy(&sumMutex);
+
+    if (createdWorkers != workerCount || totalTasks == 0) {
+        return 0.0;
+    }
+
+    return (double)totalSum / totalTasks;
 
 }
 
