@@ -7,26 +7,52 @@
 #include <netinet/in.h>
 #include <netdb.h> 
 
+void error(const char *msg){
+    perror(msg);
+    exit(0);
+}
+
+int main(int argc, char **argv){
+
+    if(argc != 2){
+        printf("You need to provide a port number\n");
+        exit(0);
+    }
+
+    int port = atoi(argv[1]);
+
+    int sockFD;
+
+    struct sockaddr_in addr;
+
+    char buffer[1024];
+
+    sockFD = socket(AF_INET, SOCK_STREAM, 0);
+
+    if(sockFD < 0){
+        perror("Socket Error");
+        exit(1);
+    }
+
+    printf("[+] Client socket created.\n");
+
+    memset(&addr, '\0', sizeof(addr));
+
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    addr.sin_addr.s_addr = INADDR_ANY;
+
+    if(connect(sockFD,
+              (struct sockaddr*)&addr,
+              sizeof(addr)) < 0)
+    {
+        error("Connection Error");
+    }
+
+    printf("[+] Connected to server.\n"); //senario
 
 
-int main(int argc, char *argv[])
-{ int sockfd, portno, n;
-   struct sockaddr_in serv_addr;
-  // struct hostent *server;
-   char buffer[256];
-   portno = 1200;
-   sockfd = socket(AF_INET, SOCK_STREAM, 0); 
-   //server = gethostbyname(argv[1]);
-   bzero((char *) &serv_addr, sizeof(serv_addr));
-   serv_addr.sin_family = AF_INET;
-//bcopy((char *)server->h_addr,(char *)&serv_addr.sin_addr.s_addr,server->h_length);
- serv_addr.sin_addr.s_addr = INADDR_ANY;
- serv_addr.sin_port = htons(portno);
- connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr));
-  //senario
 
 
-
-
- close(sockfd);
+ close(sockFD);
    }
