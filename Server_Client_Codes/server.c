@@ -16,6 +16,19 @@ struct Matrix{
     int *arr;
 };
 
+struct Matrix createMatrix(int rows, int columns){
+
+    
+    struct Matrix matrix = {
+        .rows = rows,
+        .columns = columns,
+        .arr = calloc((size_t)rows * columns, sizeof *matrix.arr)
+    };
+
+    return matrix;
+
+}
+
 void error(const char *msg){
     perror(msg);
     exit(EXIT_FAILURE);
@@ -29,9 +42,70 @@ void *handle_client(void *socket_pointer){
     free(socket_pointer);
     printf("[+] Client connected.\n");
 
-    /* Keep the connection owned by this thread until the client disconnects. */
-    while((bytes_received = recv(client_sock, buffer, sizeof(buffer), 0)) > 0){
-        (void)bytes_received;
+    
+    while(1){
+       int option;
+       printf("=> Waiting For Client Request ...\n");
+       read(client_sock, &option, sizeof(int));
+
+       struct Matrix matrixA;
+       struct Matrix matrixB;
+       int rowsA = 0, columnsB = 0, columnsA = 0, rowsB = 0;
+
+       switch (option)
+                {
+                case 1:
+                   
+                    read(client_sock,&rowsA, sizeof(int));
+                    read(client_sock,&columnsA, sizeof(int));
+                    matrixA = createMatrix(rowsA, columnsA);
+                    read(client_sock, matrixA.arr, (size_t)rowsA * columnsA * sizeof matrixA.arr[0]);
+
+                    read(client_sock,&rowsB, sizeof(int));
+                    read(client_sock,&columnsB, sizeof(int));
+                    matrixA = createMatrix(rowsB, columnsB);
+                    read(client_sock, matrixA.arr, (size_t)rowsB * columnsB * sizeof matrixA.arr[0]);
+
+                  
+
+                    break;
+                case 2:
+                    read(client_sock,&rowsA, sizeof(int));
+                    read(client_sock,&columnsA, sizeof(int));
+                    matrixA = createMatrix(rowsA, columnsA);
+                    read(client_sock, matrixA.arr, (size_t)rowsA * columnsA * sizeof matrixA.arr[0]);
+
+
+                    break;
+                case 3:
+                    read(client_sock,&rowsB, sizeof(int));
+                    read(client_sock,&columnsB, sizeof(int));
+                    matrixA = createMatrix(rowsB, columnsB);
+                    read(client_sock, matrixA.arr, (size_t)rowsB * columnsB * sizeof matrixA.arr[0]);
+
+
+                    break;
+                case 4:
+                    read(client_sock,&rowsA, sizeof(int));
+                    read(client_sock,&columnsA, sizeof(int));
+                    matrixA = createMatrix(rowsA, columnsA);
+                    read(client_sock, matrixA.arr, (size_t)rowsA * columnsA * sizeof matrixA.arr[0]);
+
+
+                    break;
+                case 5:
+                    read(client_sock,&rowsB, sizeof(int));
+                    read(client_sock,&columnsB, sizeof(int));
+                    matrixA = createMatrix(rowsB, columnsB);
+                    read(client_sock, matrixA.arr, (size_t)rowsB * columnsB * sizeof matrixA.arr[0]);
+
+
+                    break;
+                case 6:
+                    continue;
+                default:
+                    break;
+                }
     }
 
     if(bytes_received < 0){
