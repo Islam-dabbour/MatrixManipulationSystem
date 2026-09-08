@@ -8,7 +8,8 @@
 #include <netinet/in.h>
 #include <pthread.h>
 #include <time.h>
-
+#include <sys/stat.h>
+#include <sys/wait.h>
 
 static int next_client_id = 1;
 pthread_mutex_t client_id_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -36,6 +37,12 @@ struct Matrix createMatrix(int rows, int columns){
 
     return matrix;
 
+}
+
+void freeAllocatedMemory(struct Matrix *matrix){
+   
+    free(matrix->arr);
+    
 }
 
 void error(const char *msg){
@@ -113,8 +120,8 @@ void *handle_client(void *socket_pointer){
                         unlink(request_fifo);
                         unlink(response_fifo);
 
-                        freeMatrix(&matrixA);
-                        freeMatrix(&matrixB);
+                        freeAllocatedMemory(&matrixA);
+                        freeAllocatedMemory(&matrixB);
 
                         break;
                     }
@@ -170,9 +177,9 @@ void *handle_client(void *socket_pointer){
                     unlink(request_fifo);
                     unlink(response_fifo);
 
-                    freeMatrix(&matrixA);
-                    freeMatrix(&matrixB);
-                    freeMatrix(&matrixC1);
+                    freeAllocatedMemory(&matrixA);
+                    freeAllocatedMemory(&matrixB);
+                    freeAllocatedMemory(&matrixC1);
                     break;
                 case 2:
                     read(client_sock,&rowsA, sizeof(int));
