@@ -71,9 +71,7 @@ int main(int argc, char **argv){
     }
 
     printf("[+] Client socket created.\n");
-    printf("=================\n");
-    printf("=   Client  UI  =\n");
-    printf("=================\n");
+
 
     memset(&addr, '\0', sizeof(addr));
 
@@ -90,29 +88,100 @@ int main(int argc, char **argv){
 
     printf("[+] Connected to server.\n"); //senario
 
-    printf("=> Enter the number of rows for matrix A: \n");
-    printf("=> ");
-    int rowsA, columnsB, columnsA, rowsB;
+    int option = 0;
+    struct Matrix matrixA;
+    struct Matrix matrixB;
+    int rowsA = 0, columnsB = 0, columnsA = 0, rowsB = 0;
 
-    scanf("%d",&rowsA);
+    while(option != -1){
 
-    printf("=> Enter the number of columns for matrix A/ rows for matrix B:\n");
-    printf("=> ");
+        printf("=================\n");
+        printf("=   Client  UI  =\n");
+        printf("=================\n");
 
-    scanf("%d",&columnsA);
-    rowsB = columnsA;
+        printf("=> Matrix A: %d * %d\n",rowsA,columnsA);
+        printf("=> Matrix B: %d * %d\n",rowsB, columnsB);
+        printf("=================\n");
+        printf("=> Options: \n");
+        printf("=> Enter 1 To Fill New Matrices: \n");
+        printf("=> Enter 2 To Open The Services List: \n");
+        printf("=> Enter -1 To Exit The System: \n");
+        printf("=> ");
+        scanf("%d",&option);
 
-    printf("=> Enter the number of columns for matrix B: \n");
-    printf("=> ");
-    scanf("%d",&columnsB);
+        switch (option)
+        {
+        case 1:
+            printf("=> Enter the number of rows for matrix A: \n");
+            printf("=> ");
+            
 
-    struct Matrix matrixA = createMatrix(rowsA, columnsA);
-    struct Matrix matrixB = createMatrix(rowsB, columnsB);
-    fillMatrix(&matrixA);
-    fillMatrix(&matrixB);
+            scanf("%d",&rowsA);
+
+            printf("=> Enter the number of columns for matrix A/ rows for matrix B:\n");
+            printf("=> ");
+
+            scanf("%d",&columnsA);
+            rowsB = columnsA;
+
+            printf("=> Enter the number of columns for matrix B: \n");
+            printf("=> ");
+            scanf("%d",&columnsB);
+
+            matrixA = createMatrix(rowsA, columnsA);
+            matrixB = createMatrix(rowsB, columnsB);
+            fillMatrix(&matrixA);
+            fillMatrix(&matrixB);
+            break;
+        case 2:
+            printf("    Services List   \n");
+            printf("=> Choose An Operation to perform on the Matrices: \n");
+            printf("=> (1) => Multiplication: Matrix A * Matrix B: \n");
+            printf("=> (2) => Transpose Matrix A: \n");
+            printf("=> (3) => Transpose Matrix B: \n");
+            printf("=> (4) => Find The Average For Matrix A: \n");
+            printf("=> (5) => Find The Average For Matrix B: \n");
+            printf("=> (6) => Go Back:\n");
+            printf("=> ");
+
+            int option2 = 0;
+            if(rowsA == 0 || rowsB == 0 || columnsA == 0 || columnsB == 0){
+                printf("=! Note The Matrices Are Empty You Cant Perform Any Operation !=\n");
+                printf("=! Please Fill The Matrices First !=\n");
+                break;
+            }else{
+                scanf("%d",&option2);
+                switch (option2)
+                {
+                case 1:
+                    /* code */
+                    break;
+                case 2:
+                    break;
+                case 3:
+                    break;
+                case 4:
+                    break;
+                case 5:
+                    break;
+                case 6:
+                    continue;
+                default:
+                    break;
+                }
+            }
+            break;
+        case -1:
+            continue;
+        default:
+            break;
+        }
+        
+
+        
 
 
-
+    }
 
 
  close(sockFD);
