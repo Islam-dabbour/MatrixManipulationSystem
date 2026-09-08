@@ -169,13 +169,70 @@ void *handle_client(void *socket_pointer){
                     freeAllocatedMemory(&matrixC1);
                     break;
                 case 2:
-                    read(client_sock,&rowsA, sizeof(int));
-                    read(client_sock,&columnsA, sizeof(int));
+                {
+                    char transpose_request_fifo[100];
+                    char transpose_response_fifo[100];
+                    snprintf(transpose_request_fifo, sizeof transpose_request_fifo,
+                             "transposition_request_%d", client_id);
+                    snprintf(transpose_response_fifo, sizeof transpose_response_fifo,
+                             "transposition_response_%d", client_id);
+
+                    read(client_sock, &rowsA, sizeof rowsA);
+                    read(client_sock, &columnsA, sizeof columnsA);
                     matrixA = createMatrix(rowsA, columnsA);
-                    read(client_sock, matrixA.arr, (size_t)rowsA * columnsA * sizeof matrixA.arr[0]);
+                    read(client_sock, matrixA.arr,
+                         (size_t)rowsA * columnsA * sizeof matrixA.arr[0]);
 
+                    unlink(transpose_request_fifo);
+                    unlink(transpose_response_fifo);
+                    if (mkfifo(transpose_request_fifo, 0666) < 0 ||
+                        mkfifo(transpose_response_fifo, 0666) < 0) {
+                        perror("mkfifo transposition");
+                        unlink(transpose_request_fifo);
+                        unlink(transpose_response_fifo);
+                        freeAllocatedMemory(&matrixA);
+                        break;
+                    }
 
+                    pid_t pid = fork();
+                    if (pid < 0) {
+                        perror("fork transposition worker");
+                        unlink(transpose_request_fifo);
+                        unlink(transpose_response_fifo);
+                        freeAllocatedMemory(&matrixA);
+                        break;
+                    }
+                    if (pid == 0) {
+                        char id_string[20];
+                        snprintf(id_string, sizeof id_string, "%d", client_id);
+                        execl("./transposition_worker", "transposition_worker",
+                              id_string, NULL);
+                        perror("execl transposition_worker");
+                        exit(EXIT_FAILURE);
+                    }
+
+                    int response_fd = open(transpose_response_fifo, O_RDONLY);
+                    int request_fd = open(transpose_request_fifo, O_WRONLY);
+                    write(request_fd, &rowsA, sizeof rowsA);
+                    write(request_fd, &columnsA, sizeof columnsA);
+                    write(request_fd, matrixA.arr,
+                          (size_t)rowsA * columnsA * sizeof matrixA.arr[0]);
+
+                    struct Matrix transpose = createMatrix(columnsA, rowsA);
+                    read(response_fd, transpose.arr,
+                         (size_t)columnsA * rowsA * sizeof transpose.arr[0]);
+                    write(client_sock, transpose.arr,
+                          (size_t)columnsA * rowsA * sizeof transpose.arr[0]);
+
+                    close(request_fd);
+                    close(response_fd);
+                    waitpid(pid, NULL, 0);
+                    unlink(transpose_request_fifo);
+                    unlink(transpose_response_fifo);
+                    freeAllocatedMemory(&matrixA);
+                    freeAllocatedMemory(&transpose);
                     break;
+                }
                 case 3:
                     read(client_sock,&rowsB, sizeof(int));
                     read(client_sock,&columnsB, sizeof(int));
@@ -185,13 +242,66 @@ void *handle_client(void *socket_pointer){
 
                     break;
                 case 4:
-                    read(client_sock,&rowsA, sizeof(int));
-                    read(client_sock,&columnsA, sizeof(int));
+                {
+                    char average_request_fifo[100];
+                    char average_response_fifo[100];
+                    snprintf(average_request_fifo, sizeof average_request_fifo,
+                             "average_request_%d", client_id);
+                    snprintf(average_response_fifo, sizeof average_response_fifo,
+                             "average_response_%d", client_id);
+
+                    read(client_sock, &rowsA, sizeof rowsA);
+                    read(client_sock, &columnsA, sizeof columnsA);
                     matrixA = createMatrix(rowsA, columnsA);
-                    read(client_sock, matrixA.arr, (size_t)rowsA * columnsA * sizeof matrixA.arr[0]);
+                    read(client_sock, matrixA.arr,
+                         (size_t)rowsA * columnsA * sizeof matrixA.arr[0]);
 
+                    unlink(average_request_fifo);
+                    unlink(average_response_fifo);
+                    if (mkfifo(average_request_fifo, 0666) < 0 ||
+                        mkfifo(average_response_fifo, 0666) < 0) {
+                        perror("mkfifo average");
+                        unlink(average_request_fifo);
+                        unlink(average_response_fifo);
+                        freeAllocatedMemory(&matrixA);
+                        break;
+                    }
 
+                    pid_t pid = fork();
+                    if (pid < 0) {
+                        perror("fork average worker");
+                        unlink(average_request_fifo);
+                        unlink(average_response_fifo);
+                        freeAllocatedMemory(&matrixA);
+                        break;
+                    }
+                    if (pid == 0) {
+                        char id_string[20];
+                        snprintf(id_string, sizeof id_string, "%d", client_id);
+                        execl("./average_worker", "average_worker", id_string, NULL);
+                        perror("execl average_worker");
+                        exit(EXIT_FAILURE);
+                    }
+
+                    int response_fd = open(average_response_fifo, O_RDONLY);
+                    int request_fd = open(average_request_fifo, O_WRONLY);
+                    write(request_fd, &rowsA, sizeof rowsA);
+                    write(request_fd, &columnsA, sizeof columnsA);
+                    write(request_fd, matrixA.arr,
+                          (size_t)rowsA * columnsA * sizeof matrixA.arr[0]);
+
+                    double average = 0.0;
+                    read(response_fd, &average, sizeof average);
+                    write(client_sock, &average, sizeof average);
+
+                    close(request_fd);
+                    close(response_fd);
+                    waitpid(pid, NULL, 0);
+                    unlink(average_request_fifo);
+                    unlink(average_response_fifo);
+                    freeAllocatedMemory(&matrixA);
                     break;
+                }
                 case 5:
                     read(client_sock,&rowsB, sizeof(int));
                     read(client_sock,&columnsB, sizeof(int));

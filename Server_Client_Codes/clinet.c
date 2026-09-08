@@ -206,6 +206,7 @@ int main(int argc, char **argv){
 
                     struct Matrix matrixC2 = createMatrix(columnsA, rowsA);
                     read(sockFD, matrixC2.arr, (size_t)rowsA * columnsA * sizeof matrixC2.arr[0]);
+                    printMatrix(matrixC2);
                     break;
                 case 3:
 
@@ -226,6 +227,7 @@ int main(int argc, char **argv){
 
                     double avg1 = 0.0;
                     read(sockFD,&avg1,sizeof(avg1));
+                    printf("Average: %f\n", avg1);
                     break;
                 case 5:
                     printf("=! The Servie Is Currntly Unavailable !=\n");
