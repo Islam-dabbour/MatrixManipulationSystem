@@ -162,26 +162,26 @@ struct Matrix matrixMultipication(struct Matrix matrixA, struct Matrix matrixB){
     return matrixC;
 }
 
-void *matrixMultipicationThread (void *arg){
-
-    struct MatricesArgs *matrices = arg;
 
 
 
-    return NULL;
-}
-
-
-int main(void){
+int main(int argc, char **argv){
 
     srand((unsigned)time(NULL));
    
-    mkfifo("multiplication_response", 0666);
-    mkfifo("multiplication_request", 0666);
+   
 
-    
+    int client_id =atoi(argv[1]);
 
-    
+    char request_fifo[100];
+    char response_fifo[100];
+
+    snprintf(request_fifo,sizeof(request_fifo),"multiplication_request_%d",client_id);
+
+
+    snprintf(response_fifo, sizeof(response_fifo),"multiplication_response_%d",client_id);
+
+    printf("[Worker %d] Starting.\n",client_id);
 
     // printf("============================\n");
     // printf(" Matrix Manipulation System \n");
@@ -199,8 +199,8 @@ int main(void){
 
 
     struct timeval startM, endM; 
-    int fd = open("multiplication_response", O_WRONLY);
-    int fd2 = open("multiplication_request", O_RDONLY);
+    int fd = open(response_fifo, O_WRONLY);
+    int fd2 = open(request_fifo, O_RDONLY);
     read(fd2,&rowsA,sizeof(int));
     read(fd2,&columnsA,sizeof(int));
     read(fd2,matrixA.arr,(size_t)rowsA * columnsA * sizeof matrixA.arr[0]);

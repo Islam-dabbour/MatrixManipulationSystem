@@ -9,11 +9,20 @@
 #include <pthread.h>
 #include <time.h>
 
+
+static int next_client_id = 1;
+pthread_mutex_t client_id_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 struct Matrix{
 
     int rows;
     int columns;
     int *arr;
+};
+
+struct ClientInfo {
+    int socket;
+    int client_id;
 };
 
 struct Matrix createMatrix(int rows, int columns){
@@ -35,17 +44,31 @@ void error(const char *msg){
 }
 
 void *handle_client(void *socket_pointer){
-    int client_sock = *(int *)socket_pointer;
+
+    struct ClientInfo *client = socket_pointer;
+
+    int client_sock = client->socket;
+    int client_id = client->client_id;
+
+    free(client);
     char buffer[1024];
     ssize_t bytes_received;
 
     free(socket_pointer);
-    printf("[+] Client connected.\n");
+    printf("[+] Client %d connected.\n", client_id);
 
-    
+        char request_fifo[100];
+    char response_fifo[100];
+
+    snprintf( request_fifo, sizeof(request_fifo), "multiplication_request_%d",client_id );
+
+    snprintf(response_fifo,sizeof(response_fifo),"multiplication_response_%d", client_id);
+
+    write(client_sock, &client_id, sizeof(client_id));
+
     while(1){
        int option;
-       printf("=> Waiting For Client Request ...\n");
+       printf("[Client %d] Waiting for request...\n", client_id);
        read(client_sock, &option, sizeof(int));
 
        struct Matrix matrixA;
@@ -66,12 +89,63 @@ void *handle_client(void *socket_pointer){
                     matrixB = createMatrix(rowsB, columnsB);
                     read(client_sock, matrixB.arr, (size_t)rowsB * columnsB * sizeof matrixA.arr[0]);
 
-                       
-                    mkfifo("multiplication_response", 0666);
-                    mkfifo("multiplication_request", 0666);
+                    printf("[Client %d] Multiplication request: " "%d x %d * %d x %d\n", client_id, rowsA,columnsA,rowsB,columnsB);
+                    
+                    unlink(request_fifo);
+                    unlink(response_fifo);
 
-                    int fd = open("multiplication_response", O_RDONLY);
-                    int fd2 = open("multiplication_request", O_WRONLY);
+                    if (mkfifo(request_fifo, 0666) < 0) {
+                        perror("mkfifo request");
+                        break;
+                    }
+
+                    if (mkfifo(response_fifo, 0666) < 0) {
+                        perror("mkfifo response");
+                        unlink(request_fifo);
+                        break;
+                    }
+
+                    pid_t pid = fork();
+
+                    if (pid < 0) {
+                        perror("fork");
+
+                        unlink(request_fifo);
+                        unlink(response_fifo);
+
+                        freeMatrix(&matrixA);
+                        freeMatrix(&matrixB);
+
+                        break;
+                    }
+
+
+                    if (pid == 0)
+                    {
+    
+
+                        char id_string[20];
+
+                        snprintf(
+                            id_string,
+                            sizeof(id_string),
+                            "%d",
+                            client_id
+                        );
+
+                        execl(
+                            "./multiplication_worker",
+                            "multiplication_worker",
+                            id_string,
+                            NULL
+                        );
+
+                        perror("execl multiplication_worker");
+                        exit(EXIT_FAILURE);
+                    }
+
+                    int fd = open(response_fifo, O_RDONLY);
+                    int fd2 = open(request_fifo, O_WRONLY);
 
                     write(fd2,&rowsA,sizeof(int));
                     write(fd2,&columnsA,sizeof(int));
@@ -87,6 +161,18 @@ void *handle_client(void *socket_pointer){
 
                     write(client_sock, matrixC1.arr, (size_t)rowsA * columnsB * sizeof matrixC1.arr[0]);
 
+                    printf("[Client %d] Multiplication completed.\n",client_id );
+                    
+                    waitpid(pid, NULL, 0);
+
+
+        
+                    unlink(request_fifo);
+                    unlink(response_fifo);
+
+                    freeMatrix(&matrixA);
+                    freeMatrix(&matrixB);
+                    freeMatrix(&matrixC1);
                     break;
                 case 2:
                     read(client_sock,&rowsA, sizeof(int));
@@ -132,7 +218,7 @@ void *handle_client(void *socket_pointer){
     }
 
     close(client_sock);
-    printf("[-] Client disconnected.\n");
+    printf("[-] Client %d disconnected.\n", client_id);
     return NULL;
 }
 
@@ -189,26 +275,34 @@ int main(int argc, char **argv){
 
     while(1){
         pthread_t client_thread;
-        int *client_sock = malloc(sizeof(*client_sock));
+        struct ClientInfo *client = malloc(sizeof(struct ClientInfo));
 
-        if(client_sock == NULL){
+        if(client == NULL){
             perror("Memory Allocation Error");
             continue;
         }
 
         addr_size = sizeof(client_addr);
-        *client_sock = accept(server_sock, (struct sockaddr *)&client_addr, &addr_size);
+        client->socket = accept(server_sock, (struct sockaddr *)&client_addr, &addr_size);
 
-        if(*client_sock < 0){
+        if(client->socket < 0){
             perror("Accept Error");
-            free(client_sock);
+            free(client);
             continue;
         }
 
-        if(pthread_create(&client_thread, NULL, handle_client, client_sock) != 0){
+        pthread_mutex_lock(&client_id_mutex);
+
+        client->client_id = next_client_id++;
+
+        pthread_mutex_unlock(&client_id_mutex);
+
+        printf("[+] New client assigned ID: %d\n",client->client_id);
+
+        if(pthread_create(&client_thread, NULL, handle_client, client) != 0){
             perror("Thread Creation Error");
-            close(*client_sock);
-            free(client_sock);
+            close(client->socket);
+            free(client);
             continue;
         }
 
