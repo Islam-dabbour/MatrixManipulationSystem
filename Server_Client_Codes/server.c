@@ -9,6 +9,13 @@
 #include <pthread.h>
 #include <time.h>
 
+struct Matrix{
+
+    int rows;
+    int columns;
+    int *arr;
+};
+
 void error(const char *msg){
     perror(msg);
     exit(EXIT_FAILURE);

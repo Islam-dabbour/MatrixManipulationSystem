@@ -154,15 +154,58 @@ int main(int argc, char **argv){
                 switch (option2)
                 {
                 case 1:
-                    /* code */
+                    // Sending the struct only sends the pointer address, not the matrix data stored in arr.
+                    // therefore we need to fix this issue so rather than:
+                    // write(sockFD,&matrixA,sizeof(struct Matrix));
+                    // write(sockFD,&matrixB,sizeof(struct Matrix));
+
+                    // we will use
+
+                    write(sockFD, &rowsA, sizeof rowsA);
+                    write(sockFD, &columnsA, sizeof columnsA);
+                    write(sockFD, matrixA.arr,(size_t)rowsA * columnsA * sizeof matrixA.arr[0]);
+
+                    write(sockFD, &rowsB, sizeof rowsB);
+                    write(sockFD, &columnsB, sizeof columnsB);
+                    write(sockFD, matrixB.arr, (size_t)rowsB * columnsB * sizeof matrixB.arr[0]);
+
+                    // write(&sockFD,matrixB.arr,sizeof(matrixB.arr)); is also wrong
+                    // beucuse sizeof(matrixB.arr) only sends the size of the pointer not the data
+
+                    struct Matrix matrixC = createMatrix(rowsA, columnsB);
+                    read(sockFD, matrixC.arr, (size_t)rowsA * columnsB * sizeof matrixC.arr[0]);
                     break;
                 case 2:
+                    write(sockFD, &rowsA, sizeof rowsA);
+                    write(sockFD, &columnsA, sizeof columnsA);
+                    write(sockFD, matrixA.arr,(size_t)rowsA * columnsA * sizeof matrixA.arr[0]);
+
+                    struct Matrix matrixC = createMatrix(columnsA, rowsA);
+                    read(sockFD, matrixC.arr, (size_t)columnsA * rowsA * sizeof matrixC.arr[0]);
                     break;
                 case 3:
+                    write(sockFD, &rowsB, sizeof rowsB);
+                    write(sockFD, &columnsB, sizeof columnsB);
+                    write(sockFD, matrixB.arr, (size_t)rowsB * columnsB * sizeof matrixB.arr[0]);
+
+                    struct Matrix matrixC = createMatrix(columnsB, rowsB);
+                    read(sockFD, matrixC.arr, (size_t)columnsB * rowsB * sizeof matrixC.arr[0]);
                     break;
                 case 4:
+                    write(sockFD, &rowsA, sizeof rowsA);
+                    write(sockFD, &columnsA, sizeof columnsA);
+                    write(sockFD, matrixA.arr,(size_t)rowsA * columnsA * sizeof matrixA.arr[0]);
+
+                    double avg = 0.0;
+                    read(sockFD,&avg,sizeof(avg));
                     break;
                 case 5:
+                    write(sockFD, &rowsB, sizeof rowsB);
+                    write(sockFD, &columnsB, sizeof columnsB);
+                    write(sockFD, matrixB.arr, (size_t)rowsB * columnsB * sizeof matrixB.arr[0]);
+
+                    double avg = 0.0;
+                    read(sockFD,&avg,sizeof(avg));
                     break;
                 case 6:
                     continue;
