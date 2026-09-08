@@ -149,6 +149,9 @@ int main(int argc, char **argv){
             matrixB = createMatrix(rowsB, columnsB);
             fillMatrix(&matrixA);
             fillMatrix(&matrixB);
+
+            printMatrix(matrixA);
+            printMatrix(matrixB);
             break;
         case 2:
             printf("    Services List   \n");

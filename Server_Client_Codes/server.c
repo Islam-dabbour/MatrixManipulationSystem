@@ -58,10 +58,7 @@ void *handle_client(void *socket_pointer){
     int client_id = client->client_id;
 
     free(client);
-    char buffer[1024];
-    ssize_t bytes_received;
 
-    free(socket_pointer);
     printf("[+] Client %d connected.\n", client_id);
 
         char request_fifo[100];
@@ -218,10 +215,6 @@ void *handle_client(void *socket_pointer){
                 default:
                     break;
                 }
-    }
-
-    if(bytes_received < 0){
-        perror("Receive Error");
     }
 
     close(client_sock);
