@@ -60,15 +60,17 @@ int main(int argc, char **argv){
     addr_size = sizeof(client_addr);
 
     client_sock = accept(server_sock,(struct sockaddr*)&client_addr,&addr_size);//the senario
+
 	
+
 	if(client_sock < 0)
         error("Accept Error");
 
     printf("[+] Client Connected.\n");
     
     close(client_sock);
-	
 	close(server_sock);
 
+    return 0;
 
  }

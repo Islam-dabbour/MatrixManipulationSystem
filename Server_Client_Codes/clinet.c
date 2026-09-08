@@ -116,4 +116,7 @@ int main(int argc, char **argv){
 
 
  close(sockFD);
-   }
+
+ return 0;
+
+}
