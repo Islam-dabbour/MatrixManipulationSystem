@@ -48,6 +48,23 @@ struct Matrix createMatrix(int rows, int columns){
 
 }
 
+void printMatrix(struct Matrix matrix){
+
+    for (int i = 0; i < matrix.rows; i++) {
+
+        for (int j = 0; j < matrix.columns; j++) {
+
+            //matrix.arr[i * matrix->columns + j] = (rand() % 100) + 1; 
+            printf("%d ",matrix.arr[i * matrix.columns + j]);
+
+        }
+
+        printf("\n");
+
+    }
+    
+}
+
 int main(int argc, char **argv){
 
     if(argc != 2){
@@ -176,6 +193,8 @@ int main(int argc, char **argv){
 
                     struct Matrix matrixC1 = createMatrix(rowsA, columnsB);
                     read(sockFD, matrixC1.arr, (size_t)rowsA * columnsB * sizeof matrixC1.arr[0]);
+
+                    printMatrix(matrixC1);
                     break;
                 case 2:
                     write(sockFD, &rowsA, sizeof rowsA);
