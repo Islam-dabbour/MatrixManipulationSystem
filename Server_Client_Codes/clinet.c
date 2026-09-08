@@ -208,6 +208,10 @@ int main(int argc, char **argv){
                     read(sockFD, matrixC2.arr, (size_t)rowsA * columnsA * sizeof matrixC2.arr[0]);
                     break;
                 case 3:
+
+                    printf("=! The Servie Is Currntly Unavailable !=\n");
+                    continue;
+
                     write(sockFD, &rowsB, sizeof rowsB);
                     write(sockFD, &columnsB, sizeof columnsB);
                     write(sockFD, matrixB.arr, (size_t)rowsB * columnsB * sizeof matrixB.arr[0]);
@@ -224,6 +228,9 @@ int main(int argc, char **argv){
                     read(sockFD,&avg1,sizeof(avg1));
                     break;
                 case 5:
+                    printf("=! The Servie Is Currntly Unavailable !=\n");
+                    continue;
+                    
                     write(sockFD, &rowsB, sizeof rowsB);
                     write(sockFD, &columnsB, sizeof columnsB);
                     write(sockFD, matrixB.arr, (size_t)rowsB * columnsB * sizeof matrixB.arr[0]);

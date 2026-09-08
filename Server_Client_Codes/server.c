@@ -130,19 +130,9 @@ void *handle_client(void *socket_pointer){
 
                         char id_string[20];
 
-                        snprintf(
-                            id_string,
-                            sizeof(id_string),
-                            "%d",
-                            client_id
-                        );
+                        snprintf(id_string,sizeof(id_string),"%d",client_id);
 
-                        execl(
-                            "./multiplication_worker",
-                            "multiplication_worker",
-                            id_string,
-                            NULL
-                        );
+                        execl("./multiplication_worker","multiplication_worker",id_string,NULL);
 
                         perror("execl multiplication_worker");
                         exit(EXIT_FAILURE);
