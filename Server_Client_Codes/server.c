@@ -63,10 +63,29 @@ void *handle_client(void *socket_pointer){
 
                     read(client_sock,&rowsB, sizeof(int));
                     read(client_sock,&columnsB, sizeof(int));
-                    matrixA = createMatrix(rowsB, columnsB);
-                    read(client_sock, matrixA.arr, (size_t)rowsB * columnsB * sizeof matrixA.arr[0]);
+                    matrixB = createMatrix(rowsB, columnsB);
+                    read(client_sock, matrixB.arr, (size_t)rowsB * columnsB * sizeof matrixA.arr[0]);
 
-                  
+                       
+                    mkfifo("multiplication_response", 0666);
+                    mkfifo("multiplication_request", 0666);
+
+                    int fd = open("multiplication_response", O_RDONLY);
+                    int fd2 = open("multiplication_request", O_WRONLY);
+
+                    write(fd2,&rowsA,sizeof(int));
+                    write(fd2,&columnsA,sizeof(int));
+                    write(fd2,matrixA.arr,(size_t)rowsA * columnsA * sizeof matrixA.arr[0]);
+
+                    write(fd2,&rowsB,sizeof(int));
+                    write(fd2,&columnsB,sizeof(int));
+                    write(fd2,matrixB.arr,(size_t)rowsB * columnsB * sizeof matrixB.arr[0]);
+
+                    struct Matrix matrixC1 = createMatrix(rowsA, columnsB);
+
+                    read(fd,matrixC1.arr,(size_t)rowsA * columnsB * sizeof matrixC1.arr[0]);
+
+                    write(client_sock, matrixC1.arr, (size_t)rowsA * columnsB * sizeof matrixC1.arr[0]);
 
                     break;
                 case 2:
