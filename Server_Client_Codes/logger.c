@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 
         fprintf(
             log_file,
-            "[%s] [Client:%d] [PID:%d] [Thread:%lu] "
+            "[%s] [Client:%d] "
             "[%s] [%s] %s\n",
             log.timestamp,
             log.clientId,

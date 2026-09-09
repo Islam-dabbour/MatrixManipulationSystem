@@ -105,6 +105,13 @@ int main(int argc, char **argv){
 
     printf("[+] Connected to server.\n"); //senario
 
+    int client_id;
+    if (read(sockFD, &client_id, sizeof client_id) != sizeof client_id) {
+        perror("Reading client ID");
+        close(sockFD);
+        return EXIT_FAILURE;
+    }
+
     int option = 0;
     struct Matrix matrixA;
     struct Matrix matrixB;

@@ -10,6 +10,7 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include "logger.h"
 
 static int next_client_id = 1;
 pthread_mutex_t client_id_mutex = PTHREAD_MUTEX_INITIALIZER;

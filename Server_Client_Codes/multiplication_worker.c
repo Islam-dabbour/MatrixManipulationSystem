@@ -192,25 +192,22 @@ int main(int argc, char **argv){
     int columnsA;
     int rowsB;
     
-    
     struct Matrix matrixA;
     struct Matrix matrixB;
     struct Matrix matrixC;
-
-
+    
     struct timeval startM, endM; 
     int fd = open(response_fifo, O_WRONLY);
     int fd2 = open(request_fifo, O_RDONLY);
     read(fd2,&rowsA,sizeof(int));
     read(fd2,&columnsA,sizeof(int));
+    matrixA = createEmptyMatrix(rowsA, columnsA);
     read(fd2,matrixA.arr,(size_t)rowsA * columnsA * sizeof matrixA.arr[0]);
 
     read(fd2,&rowsB,sizeof(int));
     read(fd2,&columnsB,sizeof(int));
-    read(fd2,matrixB.arr,(size_t)rowsB * columnsB * sizeof matrixB.arr[0]);
-
-    matrixA = createEmptyMatrix(rowsA, columnsA);
     matrixB = createEmptyMatrix(rowsB, columnsB);
+    read(fd2,matrixB.arr,(size_t)rowsB * columnsB * sizeof matrixB.arr[0]);
     // printf("============================\n");
     // printf("   Matrix Multipication     \n");
     //printf("============================\n");
