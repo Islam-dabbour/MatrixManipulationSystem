@@ -30,9 +30,7 @@ struct LogMessage {
     char timestamp[64];
 
     int clientId;
-    pid_t processId;
 
-    unsigned long threadId;
 
     char event[64];
     char operation[64];
@@ -341,6 +339,29 @@ int main(int argc, char **argv){
     if(argc != 2){
         printf("You need to provide a port number\n");
         exit(0);
+    }
+    int log_pipe[2];
+    pipe(log_pipe);
+
+    int pid_logger = fork();
+
+    if(pid_logger == 0){
+        close(log_pipe[1]);
+
+        char pipe_fd_string[20];
+
+        snprintf(
+            pipe_fd_string,
+            sizeof(pipe_fd_string),
+            "%d",
+            log_pipe[0]
+        );
+
+        execl("./logger","logger",pipe_fd_string,NULL);
+
+     
+        perror("execl logger");
+        exit(EXIT_FAILURE);
     }
 
     int port = atoi(argv[1]);
