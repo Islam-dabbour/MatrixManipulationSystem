@@ -1,18 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
-struct LogMessage {
-    char timestamp[64];
-
-    int clientId;
+#include "logger.h"
 
 
-    char event[64];
-    char operation[64];
-
-    char message[256];
-};
 
 int main(int argc, char *argv[])
 {
