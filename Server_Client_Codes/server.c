@@ -26,6 +26,20 @@ struct ClientInfo {
     int client_id;
 };
 
+struct LogMessage {
+    char timestamp[64];
+
+    int clientId;
+    pid_t processId;
+
+    unsigned long threadId;
+
+    char event[64];
+    char operation[64];
+
+    char message[256];
+};
+
 struct Matrix createMatrix(int rows, int columns){
 
     
