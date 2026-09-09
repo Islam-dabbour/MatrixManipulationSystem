@@ -26,17 +26,7 @@ struct ClientInfo {
     int client_id;
 };
 
-struct LogMessage {
-    char timestamp[64];
 
-    int clientId;
-
-
-    char event[64];
-    char operation[64];
-
-    char message[256];
-};
 
 struct Matrix createMatrix(int rows, int columns){
 
@@ -363,6 +353,8 @@ int main(int argc, char **argv){
         perror("execl logger");
         exit(EXIT_FAILURE);
     }
+
+    log_event(log_pipe[1],"TEST-TIME",0,"SERVER_STARTED","SYSTEM","Server started successfully");
 
     int port = atoi(argv[1]);
 
