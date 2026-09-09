@@ -14,6 +14,9 @@
 
 static int next_client_id = 1;
 pthread_mutex_t client_id_mutex = PTHREAD_MUTEX_INITIALIZER;
+static int log_pipe_write = -1;
+static int time_request_write = -1;
+static int time_response_read = -1;
 
 struct Matrix{
 
@@ -63,6 +66,8 @@ void *handle_client(void *socket_pointer){
     free(client);
 
     printf("[+] Client %d connected.\n", client_id);
+    log_event(log_pipe_write, time_request_write, time_response_read,
+              client_id, "CLIENT_CONNECTED", "SYSTEM", "Client connected");
 
         char request_fifo[100];
     char response_fifo[100];
@@ -85,6 +90,10 @@ void *handle_client(void *socket_pointer){
        switch (option)
                 {
                 case 1:
+                    log_event(log_pipe_write, time_request_write,
+                              time_response_read, client_id,
+                              "REQUEST_RECEIVED", "MULTIPLICATION",
+                              "Multiplication request received");
                    
                     read(client_sock,&rowsA, sizeof(int));
                     read(client_sock,&columnsA, sizeof(int));
@@ -103,11 +112,17 @@ void *handle_client(void *socket_pointer){
 
                     if (mkfifo(request_fifo, 0666) < 0) {
                         perror("mkfifo request");
+                        log_event(log_pipe_write, time_request_write,
+                                  time_response_read, client_id, "ERROR",
+                                  "MULTIPLICATION", "Request FIFO creation failed");
                         break;
                     }
 
                     if (mkfifo(response_fifo, 0666) < 0) {
                         perror("mkfifo response");
+                        log_event(log_pipe_write, time_request_write,
+                                  time_response_read, client_id, "ERROR",
+                                  "MULTIPLICATION", "Response FIFO creation failed");
                         unlink(request_fifo);
                         break;
                     }
@@ -116,6 +131,9 @@ void *handle_client(void *socket_pointer){
 
                     if (pid < 0) {
                         perror("fork");
+                        log_event(log_pipe_write, time_request_write,
+                                  time_response_read, client_id, "ERROR",
+                                  "MULTIPLICATION", "Worker creation failed");
 
                         unlink(request_fifo);
                         unlink(response_fifo);
@@ -125,6 +143,10 @@ void *handle_client(void *socket_pointer){
 
                         break;
                     }
+
+                    log_event(log_pipe_write, time_request_write,
+                              time_response_read, client_id, "WORKER_CREATED",
+                              "MULTIPLICATION", "Multiplication worker started");
 
 
                     if (pid == 0)
@@ -159,6 +181,9 @@ void *handle_client(void *socket_pointer){
                     write(client_sock, matrixC1.arr, (size_t)rowsA * columnsB * sizeof matrixC1.arr[0]);
 
                     printf("[Client %d] Multiplication completed.\n",client_id );
+                    log_event(log_pipe_write, time_request_write,
+                              time_response_read, client_id, "OPERATION_COMPLETED",
+                              "MULTIPLICATION", "Multiplication completed");
                     
                     waitpid(pid, NULL, 0);
 
@@ -173,6 +198,10 @@ void *handle_client(void *socket_pointer){
                     break;
                 case 2:
                 {
+                    log_event(log_pipe_write, time_request_write,
+                              time_response_read, client_id,
+                              "REQUEST_RECEIVED", "TRANSPOSITION",
+                              "Transposition request received");
                     char transpose_request_fifo[100];
                     char transpose_response_fifo[100];
                     snprintf(transpose_request_fifo, sizeof transpose_request_fifo,
@@ -191,6 +220,9 @@ void *handle_client(void *socket_pointer){
                     if (mkfifo(transpose_request_fifo, 0666) < 0 ||
                         mkfifo(transpose_response_fifo, 0666) < 0) {
                         perror("mkfifo transposition");
+                        log_event(log_pipe_write, time_request_write,
+                                  time_response_read, client_id, "ERROR",
+                                  "TRANSPOSITION", "FIFO creation failed");
                         unlink(transpose_request_fifo);
                         unlink(transpose_response_fifo);
                         freeAllocatedMemory(&matrixA);
@@ -200,11 +232,18 @@ void *handle_client(void *socket_pointer){
                     pid_t pid = fork();
                     if (pid < 0) {
                         perror("fork transposition worker");
+                        log_event(log_pipe_write, time_request_write,
+                                  time_response_read, client_id, "ERROR",
+                                  "TRANSPOSITION", "Worker creation failed");
                         unlink(transpose_request_fifo);
                         unlink(transpose_response_fifo);
                         freeAllocatedMemory(&matrixA);
                         break;
                     }
+
+                    log_event(log_pipe_write, time_request_write,
+                              time_response_read, client_id, "WORKER_CREATED",
+                              "TRANSPOSITION", "Transposition worker started");
                     if (pid == 0) {
                         char id_string[20];
                         snprintf(id_string, sizeof id_string, "%d", client_id);
@@ -226,6 +265,9 @@ void *handle_client(void *socket_pointer){
                          (size_t)columnsA * rowsA * sizeof transpose.arr[0]);
                     write(client_sock, transpose.arr,
                           (size_t)columnsA * rowsA * sizeof transpose.arr[0]);
+                      log_event(log_pipe_write, time_request_write,
+                            time_response_read, client_id, "OPERATION_COMPLETED",
+                            "TRANSPOSITION", "Transposition completed");
 
                     close(request_fd);
                     close(response_fd);
@@ -237,6 +279,10 @@ void *handle_client(void *socket_pointer){
                     break;
                 }
                 case 3:
+                    log_event(log_pipe_write, time_request_write,
+                              time_response_read, client_id,
+                              "REQUEST_RECEIVED", "MATRIX_INPUT",
+                              "Matrix input request received");
                     read(client_sock,&rowsB, sizeof(int));
                     read(client_sock,&columnsB, sizeof(int));
                     matrixA = createMatrix(rowsB, columnsB);
@@ -246,6 +292,10 @@ void *handle_client(void *socket_pointer){
                     break;
                 case 4:
                 {
+                    log_event(log_pipe_write, time_request_write,
+                              time_response_read, client_id,
+                              "REQUEST_RECEIVED", "AVERAGE",
+                              "Average request received");
                     char average_request_fifo[100];
                     char average_response_fifo[100];
                     snprintf(average_request_fifo, sizeof average_request_fifo,
@@ -264,6 +314,9 @@ void *handle_client(void *socket_pointer){
                     if (mkfifo(average_request_fifo, 0666) < 0 ||
                         mkfifo(average_response_fifo, 0666) < 0) {
                         perror("mkfifo average");
+                        log_event(log_pipe_write, time_request_write,
+                                  time_response_read, client_id, "ERROR",
+                                  "AVERAGE", "FIFO creation failed");
                         unlink(average_request_fifo);
                         unlink(average_response_fifo);
                         freeAllocatedMemory(&matrixA);
@@ -273,11 +326,18 @@ void *handle_client(void *socket_pointer){
                     pid_t pid = fork();
                     if (pid < 0) {
                         perror("fork average worker");
+                        log_event(log_pipe_write, time_request_write,
+                                  time_response_read, client_id, "ERROR",
+                                  "AVERAGE", "Worker creation failed");
                         unlink(average_request_fifo);
                         unlink(average_response_fifo);
                         freeAllocatedMemory(&matrixA);
                         break;
                     }
+
+                    log_event(log_pipe_write, time_request_write,
+                              time_response_read, client_id, "WORKER_CREATED",
+                              "AVERAGE", "Average worker started");
                     if (pid == 0) {
                         char id_string[20];
                         snprintf(id_string, sizeof id_string, "%d", client_id);
@@ -296,6 +356,9 @@ void *handle_client(void *socket_pointer){
                     double average = 0.0;
                     read(response_fd, &average, sizeof average);
                     write(client_sock, &average, sizeof average);
+                    log_event(log_pipe_write, time_request_write,
+                              time_response_read, client_id, "OPERATION_COMPLETED",
+                              "AVERAGE", "Average completed");
 
                     close(request_fd);
                     close(response_fd);
@@ -306,6 +369,10 @@ void *handle_client(void *socket_pointer){
                     break;
                 }
                 case 5:
+                    log_event(log_pipe_write, time_request_write,
+                              time_response_read, client_id,
+                              "REQUEST_RECEIVED", "MATRIX_INPUT",
+                              "Matrix input request received");
                     read(client_sock,&rowsB, sizeof(int));
                     read(client_sock,&columnsB, sizeof(int));
                     matrixA = createMatrix(rowsB, columnsB);
@@ -322,6 +389,8 @@ void *handle_client(void *socket_pointer){
 
     close(client_sock);
     printf("[-] Client %d disconnected.\n", client_id);
+    log_event(log_pipe_write, time_request_write, time_response_read,
+              client_id, "CLIENT_DISCONNECTED", "SYSTEM", "Client disconnected");
     return NULL;
 }
 
@@ -332,12 +401,47 @@ int main(int argc, char **argv){
         exit(0);
     }
     int log_pipe[2];
-    pipe(log_pipe);
+    int time_request_pipe[2];
+    int time_response_pipe[2];
+
+    if (pipe(log_pipe) < 0 || pipe(time_request_pipe) < 0 ||
+        pipe(time_response_pipe) < 0) {
+        perror("pipe");
+        return EXIT_FAILURE;
+    }
+
+    pid_t pid_time = fork();
+    if (pid_time < 0) {
+        perror("fork time process");
+        return EXIT_FAILURE;
+    }
+
+    if (pid_time == 0) {
+        char request_fd_string[20];
+        char response_fd_string[20];
+
+        close(log_pipe[0]);
+        close(log_pipe[1]);
+        close(time_request_pipe[1]);
+        close(time_response_pipe[0]);
+        snprintf(request_fd_string, sizeof request_fd_string, "%d",
+                 time_request_pipe[0]);
+        snprintf(response_fd_string, sizeof response_fd_string, "%d",
+                 time_response_pipe[1]);
+        execl("./time_process", "time_process", request_fd_string,
+              response_fd_string, NULL);
+        perror("execl time_process");
+        exit(EXIT_FAILURE);
+    }
 
     int pid_logger = fork();
 
     if(pid_logger == 0){
         close(log_pipe[1]);
+        close(time_request_pipe[0]);
+        close(time_request_pipe[1]);
+        close(time_response_pipe[0]);
+        close(time_response_pipe[1]);
 
         char pipe_fd_string[20];
 
@@ -355,7 +459,15 @@ int main(int argc, char **argv){
         exit(EXIT_FAILURE);
     }
 
-    log_event(log_pipe[1],"TEST-TIME",0,"SERVER_STARTED","SYSTEM","Server started successfully");
+    close(log_pipe[0]);
+    close(time_request_pipe[0]);
+    close(time_response_pipe[1]);
+    log_pipe_write = log_pipe[1];
+    time_request_write = time_request_pipe[1];
+    time_response_read = time_response_pipe[0];
+
+    log_event(log_pipe_write, time_request_write, time_response_read,
+              0, "SERVER_STARTED", "SYSTEM", "Server started successfully");
 
     int port = atoi(argv[1]);
 

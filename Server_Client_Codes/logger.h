@@ -17,7 +17,8 @@ struct LogMessage {
 
 void log_event(
     int pipe_fd,
-    const char *timestamp,
+    int time_request_fd,
+    int time_response_fd,
     int client_id,
     const char *event,
     const char *operation,
