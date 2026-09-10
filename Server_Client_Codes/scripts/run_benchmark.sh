@@ -10,11 +10,29 @@
 set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-RESULTS_ROOT="$(cat "${PROJECT_ROOT}/.last_run")"
+RUN_ID="$(date +%Y%m%d_%H%M%S)"
+RESULTS_ROOT="${PROJECT_ROOT}/results/${RUN_ID}"
 PORT=5050
 NUM_CLIENTS=5
 
+mkdir -p "${RESULTS_ROOT}/logs" \
+         "${RESULTS_ROOT}/computation_results" \
+         "${RESULTS_ROOT}/timing_stats" \
+         "${RESULTS_ROOT}/reports" \
+         "${RESULTS_ROOT}/diagnostics"
+printf '%s\n' "${RESULTS_ROOT}" > "${PROJECT_ROOT}/.last_run"
+
 echo "[BENCH] Using results directory: ${RESULTS_ROOT}"
+
+SERVER_PID=""
+
+cleanup() {
+    if [[ -n "${SERVER_PID}" ]] && kill -0 "${SERVER_PID}" 2>/dev/null; then
+        kill "${SERVER_PID}" 2>/dev/null || true
+        wait "${SERVER_PID}" 2>/dev/null || true
+    fi
+}
+trap cleanup EXIT INT TERM
 
 # ---------------------------------------------------------------------------
 # 1. Launch the server in the background
@@ -85,10 +103,8 @@ echo "[BENCH] All ${NUM_CLIENTS} concurrent client sessions completed."
 echo "[BENCH] Timing summary written to reports/timing_summary.csv"
 
 # ---------------------------------------------------------------------------
-# 5. Shut down the server and copy its log into the run's results directory
+# 5. Copy the server log into the run's results directory
 # ---------------------------------------------------------------------------
-kill "${SERVER_PID}" 2>/dev/null || true
-wait "${SERVER_PID}" 2>/dev/null || true
 cp "${PROJECT_ROOT}/server.log" "${RESULTS_ROOT}/logs/server.log" 2>/dev/null || true
 
 "${PROJECT_ROOT}/scripts/permissions.sh" lock "${RESULTS_ROOT}/logs"
