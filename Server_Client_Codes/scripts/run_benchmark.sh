@@ -19,7 +19,7 @@ echo "[BENCH] Using results directory: ${RESULTS_ROOT}"
 # ---------------------------------------------------------------------------
 # 1. Launch the server in the background
 # ---------------------------------------------------------------------------
-cd "${PROJECT_ROOT}/src"
+cd "${PROJECT_ROOT}"
 ./server "${PORT}" > "${RESULTS_ROOT}/logs/server_stdout.log" 2>&1 &
 SERVER_PID=$!
 echo "[BENCH] Server started (PID ${SERVER_PID}) on port ${PORT}"
@@ -70,7 +70,7 @@ echo "[BENCH] All ${NUM_CLIENTS} concurrent client sessions completed."
 # ---------------------------------------------------------------------------
 # 3. Verify correctness of each client's result
 # ---------------------------------------------------------------------------
-"${PROJECT_ROOT}/scripts/verify_results.sh" "${RESULTS_ROOT}"
+"${PROJECT_ROOT}/scripts/verify_result.sh" "${RESULTS_ROOT}"
 
 # ---------------------------------------------------------------------------
 # 4. Aggregate timing statistics into a single report
@@ -89,7 +89,7 @@ echo "[BENCH] Timing summary written to reports/timing_summary.csv"
 # ---------------------------------------------------------------------------
 kill "${SERVER_PID}" 2>/dev/null || true
 wait "${SERVER_PID}" 2>/dev/null || true
-cp "${PROJECT_ROOT}/src/server.log" "${RESULTS_ROOT}/logs/server.log" 2>/dev/null || true
+cp "${PROJECT_ROOT}/server.log" "${RESULTS_ROOT}/logs/server.log" 2>/dev/null || true
 
 "${PROJECT_ROOT}/scripts/permissions.sh" lock "${RESULTS_ROOT}/logs"
 

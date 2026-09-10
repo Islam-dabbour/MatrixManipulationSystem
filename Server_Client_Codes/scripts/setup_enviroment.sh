@@ -30,10 +30,10 @@ echo "[SETUP] Output hierarchy created under: ${RESULTS_ROOT}"
 # 2. Compilation
 # ---------------------------------------------------------------------------
 echo "[SETUP] Compiling binaries..."
-cd "${PROJECT_ROOT}/src"
+cd "${PROJECT_ROOT}"
 
-gcc -o server            server.c logger.c        -lpthread
-gcc -o client             client.c
+gcc -o server            server.c logger_utils.c  -lpthread
+gcc -o client             clinet.c
 gcc -o multiplication_worker  multiplication_worker.c  -lpthread
 gcc -o transposition_worker   transposition_worker.c   -lpthread
 gcc -o average_worker         average_worker.c         -lpthread
@@ -45,6 +45,6 @@ echo "[SETUP] Compilation completed successfully."
 # ---------------------------------------------------------------------------
 # 3. Permissions
 # ---------------------------------------------------------------------------
-"${PROJECT_ROOT}/scripts/permissions.sh" apply "${PROJECT_ROOT}/src"
+"${PROJECT_ROOT}/scripts/permissions.sh" apply "${PROJECT_ROOT}"
 
 echo "[SETUP] Environment ready. Results directory: ${RESULTS_ROOT}"
