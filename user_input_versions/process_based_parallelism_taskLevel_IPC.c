@@ -568,7 +568,7 @@ int main(int argc, char *argv[]){
             read(multiplicationPipe[0], multiplicationResult.arr,(size_t)multiplicationResult.rows * multiplicationResult.columns * sizeof(int));
             close(multiplicationPipe[0]);
 
-            printMatrix(multiplicationResult);
+            //printMatrix(multiplicationResult);
             freeAllocatedMemory(&multiplicationResult);      
 
 
@@ -590,7 +590,7 @@ int main(int argc, char *argv[]){
             read(transpositionPipe[0], transposeResult.arr,(size_t)transposeResult.rows * transposeResult.columns * sizeof(int));
             close(transpositionPipe[0]);
 
-            printMatrix(transposeResult);
+           // printMatrix(transposeResult);
             freeAllocatedMemory(&transposeResult);
 
             double avg = 0.0;
