@@ -105,8 +105,14 @@ int main(int argc, char **argv)
 
     while (read(request_fd, &request, sizeof request) > 0) {
         if (get_network_timestamp(timestamp, sizeof timestamp) < 0) {
-            fprintf(stderr, "time_process: timestamp request failed\n");
-            break;
+            time_t current_time = time(NULL);
+            struct tm local_time;
+
+            if (gmtime_r(&current_time, &local_time) == NULL ||
+                strftime(timestamp, sizeof timestamp, "%Y-%m-%d %H:%M:%S",
+                         &local_time) == 0) {
+                snprintf(timestamp, sizeof timestamp, "1970-01-01 00:00:00");
+            }
         }
 
         if (write(response_fd, timestamp, sizeof timestamp) !=

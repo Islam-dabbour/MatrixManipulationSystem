@@ -1,21 +1,81 @@
-[TEST-TIME] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
-[TEST-TIME] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
-[TEST-TIME] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
-[TEST-TIME] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
-[TEST-TIME] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
-[2026-09-10 07:51:10] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
-[2026-09-10 07:51:11] [Client:1] [CLIENT_CONNECTED] [SYSTEM] Client connected
-[2026-09-10 07:51:11] [Client:2] [CLIENT_CONNECTED] [SYSTEM] Client connected
-[2026-09-10 07:51:17] [Client:3] [CLIENT_CONNECTED] [SYSTEM] Client connected
-[2026-09-10 07:51:17] [Client:4] [CLIENT_CONNECTED] [SYSTEM] Client connected
-[2026-09-10 07:51:17] [Client:5] [CLIENT_CONNECTED] [SYSTEM] Client connected
-[2026-09-10 07:51:23] [Client:1] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
-[2026-09-10 07:51:23] [Client:2] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
-[2026-09-10 07:51:24] [Client:3] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
-[2026-09-10 07:51:29] [Client:4] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
-[2026-09-10 07:51:30] [Client:5] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
-[2026-09-10 07:51:30] [Client:1] [WORKER_CREATED] [MULTIPLICATION] Multiplication worker started
-[2026-09-10 07:51:30] [Client:2] [WORKER_CREATED] [MULTIPLICATION] Multiplication worker started
-[2026-09-10 07:51:36] [Client:3] [WORKER_CREATED] [MULTIPLICATION] Multiplication worker started
-[2026-09-10 07:51:36] [Client:4] [WORKER_CREATED] [MULTIPLICATION] Multiplication worker started
-[2026-09-10 07:51:36] [Client:5] [WORKER_CREATED] [MULTIPLICATION] Multiplication worker started
+[2026-09-10 13:11:57] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
+[2026-09-10 13:16:29] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
+[2026-09-10 13:20:56] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
+[2026-09-10 13:27:09] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
+[2026-09-10 13:27:10] [Client:1] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 13:27:10] [Client:2] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 13:27:11] [Client:1] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 13:27:11] [Client:2] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 13:27:11] [Client:1] [WORKER_CREATED] [MULTIPLICATION] Multiplication worker started
+[2026-09-10 13:27:11] [Client:2] [WORKER_CREATED] [MULTIPLICATION] Multiplication worker started
+[2026-09-10 13:40:31] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
+[2026-09-10 13:40:37] [Client:1] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 13:40:38] [Client:3] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 13:40:38] [Client:2] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 13:40:44] [Client:4] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 13:40:44] [Client:5] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 13:40:50] [Client:1] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 13:40:50] [Client:3] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 13:40:51] [Client:2] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 13:40:51] [Client:4] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 13:43:17] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
+[2026-09-10 13:43:18] [Client:1] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 13:43:19] [Client:2] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 13:43:19] [Client:3] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 13:43:19] [Client:4] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 13:43:20] [Client:5] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 13:43:20] [Client:1] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 13:43:20] [Client:2] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 13:43:21] [Client:3] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 13:43:21] [Client:4] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 13:43:27] [Client:5] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 13:43:27] [Client:1] [WORKER_CREATED] [MULTIPLICATION] Multiplication worker started
+[2026-09-10 13:43:27] [Client:2] [WORKER_CREATED] [MULTIPLICATION] Multiplication worker started
+[2026-09-10 13:43:28] [Client:3] [WORKER_CREATED] [MULTIPLICATION] Multiplication worker started
+[2026-09-10 13:43:33] [Client:4] [WORKER_CREATED] [MULTIPLICATION] Multiplication worker started
+[2026-09-10 13:43:34] [Client:6] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 13:43:34] [Client:7] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 13:43:34] [Client:5] [WORKER_CREATED] [MULTIPLICATION] Multiplication worker started
+[2026-09-10 14:13:38] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
+[2026-09-10 14:13:53] [Client:1] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 14:56:57] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
+[2026-09-10 14:56:58] [Client:1] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 14:56:59] [Client:2] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 14:56:59] [Client:3] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 14:56:59] [Client:1] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 14:56:59] [Client:2] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 14:57:00] [Client:3] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 14:57:00] [Client:1] [WORKER_CREATED] [MULTIPLICATION] Multiplication worker started
+[2026-09-10 14:57:00] [Client:2] [WORKER_CREATED] [MULTIPLICATION] Multiplication worker started
+[2026-09-10 14:57:00] [Client:3] [WORKER_CREATED] [MULTIPLICATION] Multiplication worker started
+[2026-09-10 15:03:15] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
+[2026-09-10 15:07:18] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
+[2026-09-10 15:07:19] [Client:1] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 15:07:19] [Client:2] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 15:07:19] [Client:3] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 15:07:25] [Client:4] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 15:07:26] [Client:5] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 15:07:31] [Client:1] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 15:07:32] [Client:2] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 15:07:38] [Client:3] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 15:07:38] [Client:4] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 15:07:44] [Client:5] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 15:25:56] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
+[2026-09-10 15:27:56] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
+[2026-09-10 15:34:34] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
+[2026-09-10 15:34:35] [Client:1] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 15:34:36] [Client:2] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 15:34:36] [Client:3] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 15:34:42] [Client:4] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 15:34:53] [Client:5] [CLIENT_CONNECTED] [SYSTEM] Client connected
+[2026-09-10 15:34:54] [Client:1] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 15:34:54] [Client:2] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 15:34:59] [Client:3] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 15:35:00] [Client:4] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 15:35:00] [Client:5] [REQUEST_RECEIVED] [MULTIPLICATION] Multiplication request received
+[2026-09-10 15:35:00] [Client:1] [WORKER_CREATED] [MULTIPLICATION] Multiplication worker started
+[2026-09-10 15:35:01] [Client:2] [WORKER_CREATED] [MULTIPLICATION] Multiplication worker started
+[2026-09-10 15:35:01] [Client:3] [WORKER_CREATED] [MULTIPLICATION] Multiplication worker started
+[2026-09-10 15:36:18] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
+[2026-09-10 15:36:36] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
+[2026-09-10 15:39:09] [Client:0] [SERVER_STARTED] [SYSTEM] Server started successfully
