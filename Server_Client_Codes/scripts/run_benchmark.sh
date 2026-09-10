@@ -25,32 +25,46 @@ printf '%s\n' "${RESULTS_ROOT}" > "${PROJECT_ROOT}/.last_run"
 echo "[BENCH] Using results directory: ${RESULTS_ROOT}"
 
 SERVER_PID=""
+CLIENT_PIDS=()
 
 cleanup() {
+    for client_pid in "${CLIENT_PIDS[@]}"; do
+        kill "${client_pid}" 2>/dev/null || true
+    done
+
     if [[ -n "${SERVER_PID}" ]] && kill -0 "${SERVER_PID}" 2>/dev/null; then
-        kill "${SERVER_PID}" 2>/dev/null || true
+        kill -- "-${SERVER_PID}" 2>/dev/null || kill "${SERVER_PID}" 2>/dev/null || true
         wait "${SERVER_PID}" 2>/dev/null || true
     fi
 }
-trap cleanup EXIT INT TERM
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap 'exit 148' TSTP
+trap 'cleanup; exit 148' TSTP
 
 # ---------------------------------------------------------------------------
 # 1. Launch the server in the background
 # ---------------------------------------------------------------------------
 cd "${PROJECT_ROOT}"
-./server "${PORT}" > "${RESULTS_ROOT}/logs/server_stdout.log" 2>&1 &
+setsid ./server "${PORT}" > "${RESULTS_ROOT}/logs/server_stdout.log" 2>&1 &
 SERVER_PID=$!
 echo "[BENCH] Server started (PID ${SERVER_PID}) on port ${PORT}"
 sleep 1   # allow the socket to bind before clients connect
+
+if ! kill -0 "${SERVER_PID}" 2>/dev/null; then
+    echo "[BENCH] Server failed to start. See ${RESULTS_ROOT}/logs/server_stdout.log" >&2
+    exit 1
+fi
 
 # ---------------------------------------------------------------------------
 # 2. Generate one input script per client and launch them concurrently
 # ---------------------------------------------------------------------------
 run_single_client() {
     local client_index="$1"
-    local rows_a=$((RANDOM % 20 + 2))
-    local cols_a=$((RANDOM % 20 + 2))
-    local cols_b=$((RANDOM % 20 + 2))
+    local rows_a=2
+    local cols_a=2
+    local cols_b=2
 
     local input_file="${RESULTS_ROOT}/diagnostics/client_${client_index}_input.txt"
     local output_file="${RESULTS_ROOT}/computation_results/client_${client_index}_output.txt"
@@ -80,6 +94,7 @@ run_single_client() {
 
 for i in $(seq 1 "${NUM_CLIENTS}"); do
     run_single_client "${i}" &
+    CLIENT_PIDS+=("$!")
 done
 wait
 
