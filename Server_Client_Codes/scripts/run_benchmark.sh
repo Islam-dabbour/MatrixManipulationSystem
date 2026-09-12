@@ -13,7 +13,7 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RUN_ID="$(date +%Y%m%d_%H%M%S)"
 RESULTS_ROOT="${PROJECT_ROOT}/results/${RUN_ID}"
 PORT=3650
-NUM_CLIENTS=1
+NUM_CLIENTS=5
 
 mkdir -p "${RESULTS_ROOT}/logs" \
          "${RESULTS_ROOT}/computation_results" \
@@ -27,6 +27,15 @@ echo "[BENCH] Using results directory: ${RESULTS_ROOT}"
 SERVER_PID=""
 CLIENT_PIDS=()
 
+cleanup_ipc() {
+    rm -f "${PROJECT_ROOT}"/multiplication_request_{1..5} \
+          "${PROJECT_ROOT}"/multiplication_response_{1..5} \
+          "${PROJECT_ROOT}"/transposition_request_{1..5} \
+          "${PROJECT_ROOT}"/transposition_response_{1..5} \
+          "${PROJECT_ROOT}"/average_request_{1..5} \
+          "${PROJECT_ROOT}"/average_response_{1..5}
+}
+
 cleanup() {
     for client_pid in "${CLIENT_PIDS[@]}"; do
         kill "${client_pid}" 2>/dev/null || true
@@ -36,6 +45,8 @@ cleanup() {
         kill -- "-${SERVER_PID}" 2>/dev/null || kill "${SERVER_PID}" 2>/dev/null || true
         wait "${SERVER_PID}" 2>/dev/null || true
     fi
+
+    cleanup_ipc
 }
 trap cleanup EXIT
 trap 'exit 130' INT
@@ -47,6 +58,7 @@ trap 'cleanup; exit 148' TSTP
 # 1. Launch the server in the background
 # ---------------------------------------------------------------------------
 cd "${PROJECT_ROOT}"
+cleanup_ipc
 if ss -ltn | awk -v port=":${PORT}" '$4 ~ port"$" { found=1 } END { exit !found }'; then
     echo "[BENCH] Port ${PORT} is already in use; refusing to attach clients to an existing server." >&2
     echo "[BENCH] Stop the existing benchmark server and retry." >&2

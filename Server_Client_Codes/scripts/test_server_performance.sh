@@ -49,5 +49,5 @@ for ((client = 1; client <= NUM_CLIENTS; client++)); do
     CLIENT_PIDS+=("$!")
 done
 
-wait
+wait "${CLIENT_PIDS[@]}"
 printf '[TEST] All clients completed. Server details are in %s/server.log\n' "${PROJECT_ROOT}"
