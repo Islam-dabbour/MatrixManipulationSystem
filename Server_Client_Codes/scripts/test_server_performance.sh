@@ -14,7 +14,7 @@ NUM_CLIENTS="$1"
 ROWS_A="$2"
 COLUMNS_A="$3"
 COLUMNS_B="$4"
-PORT=5051
+PORT=1450
 SERVER_PID=""
 CLIENT_PIDS=()
 
@@ -42,6 +42,7 @@ printf '[TEST] Starting %s clients with matrices %sx%s and %sx%s on port %s\n' \
 
 for ((client = 1; client <= NUM_CLIENTS; client++)); do
     {
+        #printf 'testing'
         printf '1\n%s\n%s\n%s\n2\n1\n6\n-1\n' \
             "${ROWS_A}" "${COLUMNS_A}" "${COLUMNS_B}"
     } | "${PROJECT_ROOT}/clinet" "${PORT}" >/dev/null 2>&1 &
