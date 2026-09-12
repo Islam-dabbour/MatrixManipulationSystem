@@ -1,2 +1,0 @@
-Connection Error: Connection refused
-[+] Client socket created.

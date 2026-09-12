@@ -78,11 +78,48 @@ void *handle_client(void *socket_pointer){
 
     write(client_sock, &client_id, sizeof(client_id));
 
-    while(1){
-       int option;
-       printf("[Client %d] Waiting for request...\n", client_id);
-       read(client_sock, &option, sizeof(int));
 
+    // am debuuing the issue where the server keeps running client request
+    // even after the client was disconnected 
+    // for example when a client asks for a multiplication operation 
+    // then exits from client side
+    // the server keeps running around the last request sent by that client 
+
+    // or when the client disconnets before asking for an operation 
+    // the server keeps looping around waiting for client request status 
+
+
+    // so first i would change the while(1) to while(option != -1) //didnt work
+
+    // i will add an if stamtnet after the read // diddnt work
+
+    // i will add print test to trace the code 
+
+    // looks like the code doesnt enter the if statment 
+    // and doesnt exit the while loop as if the server didnt recive -1 from client
+    // so i will check the client code
+
+    // found the issue the client doesnt send -1 after exiting 
+
+    // even after the client sends -1 the same issue happens
+
+    // could that be becuse the clinet closes teh socket before the server reads ?
+
+    // yes that is the issue. solved
+    int option = 1;
+    while(option != -1){
+       
+       printf("[Client %d] Waiting for request...\n", client_id);
+       if (read(client_sock, &option, sizeof(int)) <= 0) {
+            break;
+        }       
+
+       printf("option == %d\n",option);
+        if(option == -1){
+            write(client_sock,&option,sizeof(int));
+            printf("test\n");
+            break;
+        }
        struct Matrix matrixA;
        struct Matrix matrixB;
        int rowsA = 0, columnsB = 0, columnsA = 0, rowsB = 0;
@@ -386,7 +423,7 @@ void *handle_client(void *socket_pointer){
                     break;
                 }
     }
-
+    printf("test2\n");
     close(client_sock);
     printf("[-] Client %d disconnected.\n", client_id);
     log_event(log_pipe_write, time_request_write, time_response_read,
@@ -466,8 +503,7 @@ int main(int argc, char **argv){
     time_request_write = time_request_pipe[1];
     time_response_read = time_response_pipe[0];
 
-    log_event(log_pipe_write, time_request_write, time_response_read,
-              0, "SERVER_STARTED", "SYSTEM", "Server started successfully");
+
 
     int port = atoi(argv[1]);
 
@@ -475,13 +511,16 @@ int main(int argc, char **argv){
     struct sockaddr_in server_addr, client_addr;
     socklen_t addr_size;
     int reuse_address = 1;
-
+    
     server_sock = socket(AF_INET, SOCK_STREAM, 0);
 
     if(server_sock < 0){
         perror("Socket Error");
         exit(1);
     }
+
+    log_event(log_pipe_write, time_request_write, time_response_read,
+              0, "SERVER_STARTED", "SYSTEM", "Server started successfully");
 
     printf("[+] Server socket created.\n");
 

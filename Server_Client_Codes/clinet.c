@@ -255,6 +255,11 @@ int main(int argc, char **argv){
             }
             break;
         case -1:
+            write(sockFD,&option,sizeof(int)); 
+            int serverStatus;
+            read(sockFD,&serverStatus,sizeof(int));
+            // i added this later so the server can exit and terminat teh connection 
+            // after the client leaves 
             continue;
         default:
             break;

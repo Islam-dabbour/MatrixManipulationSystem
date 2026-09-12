@@ -1,0 +1,3 @@
+Reading client ID: Success
+[+] Client socket created.
+[+] Connected to server.

@@ -1,0 +1,50 @@
+[+] Client socket created.
+[+] Connected to server.
+=================
+=   Client  UI  =
+=================
+=> Matrix A: 0 * 0
+=> Matrix B: 0 * 0
+=================
+=> Options: 
+=> Enter 1 To Fill New Matrices: 
+=> Enter 2 To Open The Services List: 
+=> Enter -1 To Exit The System: 
+=> => Enter the number of rows for matrix A: 
+=> => Enter the number of columns for matrix A/ rows for matrix B:
+=> => Enter the number of columns for matrix B: 
+=> 84 87 
+78 16 
+94 36 
+87 93 
+=================
+=   Client  UI  =
+=================
+=> Matrix A: 2 * 2
+=> Matrix B: 2 * 2
+=================
+=> Options: 
+=> Enter 1 To Fill New Matrices: 
+=> Enter 2 To Open The Services List: 
+=> Enter -1 To Exit The System: 
+=>     Services List   
+=> Choose An Operation to perform on the Matrices: 
+=> (1) => Multiplication: Matrix A * Matrix B: 
+=> (2) => Transpose Matrix A: 
+=> (3) => Transpose Matrix B: 
+=> (4) => Find The Average For Matrix A: 
+=> (5) => Find The Average For Matrix B: 
+=> (6) => Go Back:
+=> 15465 11115 
+8724 4296 
+=================
+=   Client  UI  =
+=================
+=> Matrix A: 2 * 2
+=> Matrix B: 2 * 2
+=================
+=> Options: 
+=> Enter 1 To Fill New Matrices: 
+=> Enter 2 To Open The Services List: 
+=> Enter -1 To Exit The System: 
+=> 
