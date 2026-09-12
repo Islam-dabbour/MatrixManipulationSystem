@@ -12,6 +12,8 @@
 #include <time.h>
 #include <unistd.h>
 
+/* The old network timestamp implementation is kept here for reference.
+ * It is disabled because every NTP timeout serializes all server log events.
 static int get_network_timestamp(char *timestamp, size_t timestamp_size)
 {
     const char *server_name = "pool.ntp.org";
@@ -90,6 +92,7 @@ static int get_network_timestamp(char *timestamp, size_t timestamp_size)
 
     return 0;
 }
+*/
 
 int main(int argc, char **argv)
 {
@@ -104,15 +107,14 @@ int main(int argc, char **argv)
     char timestamp[64];
 
     while (read(request_fd, &request, sizeof request) > 0) {
-        if (get_network_timestamp(timestamp, sizeof timestamp) < 0) {
-            time_t current_time = time(NULL);
-            struct tm local_time;
+        /* get_network_timestamp(timestamp, sizeof timestamp); */
+        time_t current_time = time(NULL);
+        struct tm local_time;
 
-            if (gmtime_r(&current_time, &local_time) == NULL ||
-                strftime(timestamp, sizeof timestamp, "%Y-%m-%d %H:%M:%S",
-                         &local_time) == 0) {
-                snprintf(timestamp, sizeof timestamp, "1970-01-01 00:00:00");
-            }
+        if (localtime_r(&current_time, &local_time) == NULL ||
+            strftime(timestamp, sizeof timestamp, "%Y-%m-%d %H:%M:%S",
+                     &local_time) == 0) {
+            snprintf(timestamp, sizeof timestamp, "1970-01-01 00:00:00");
         }
 
         if (write(response_fd, timestamp, sizeof timestamp) !=

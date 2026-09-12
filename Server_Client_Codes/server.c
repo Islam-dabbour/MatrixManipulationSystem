@@ -181,11 +181,6 @@ void *handle_client(void *socket_pointer){
                         break;
                     }
 
-                    log_event(log_pipe_write, time_request_write,
-                              time_response_read, client_id, "WORKER_CREATED",
-                              "MULTIPLICATION", "Multiplication worker started");
-
-
                     if (pid == 0)
                     {
     
@@ -199,6 +194,10 @@ void *handle_client(void *socket_pointer){
                         perror("execl multiplication_worker");
                         exit(EXIT_FAILURE);
                     }
+
+                    log_event(log_pipe_write, time_request_write,
+                              time_response_read, client_id, "WORKER_CREATED",
+                              "MULTIPLICATION", "Multiplication worker started");
 
                     int fd = open(response_fifo, O_RDONLY);
                     int fd2 = open(request_fifo, O_WRONLY);
